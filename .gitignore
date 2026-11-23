@@ -44,3 +44,14 @@ proj1_make/TOP/STA/*/report/*
 proj1_make/TOP/STA/*/*.sdf
 proj1_make/TOP/STA/*/tempus.*
 !proj1_make/TOP/STA/*/tempus.tcl
+
+# PnR outputs (database, GDS, netlist, SDF, logs, reports) : keep scripts only
+proj1_make/TOP/PNR/*
+!proj1_make/TOP/PNR/*.tcl
+!proj1_make/TOP/PNR/*.view
+!proj1_make/TOP/PNR/README.md
+!proj1_make/TOP/PNR/reports/
+!proj1_make/TOP/PNR/timingReports/
+proj1_make/TOP/PNR/reports/*/*
+proj1_make/TOP/PNR/timingReports/*
+!proj1_make/TOP/PNR/**/.gitkeep
