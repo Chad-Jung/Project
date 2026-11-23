@@ -1,24 +1,30 @@
 `timescale 1ns / 1ps
 
+// ======================================================================
+// _UART_TOP : UART IP top level  (UART IP spec Rev 1.0)
+//
+//   CPU reg access -> _UART_REG_IF -> TX FIFO -> _UART_TX -> o_txd
+//   i_rxd -> _UART_RX -> RX FIFO -> _UART_REG_IF -> CPU reg access
+//
+//   CLK_FREQ must be set to the real system clock of the target.
+// ======================================================================
 module _UART_TOP #(
-    parameter   CLK_FREQ    = 50_000_000  ,   // system clock frequency (Hz) - adjust to target board
-    parameter   BAUD_RATE   = 115_200     ,   // spec : 115,200 bps
-    parameter   OSR         = 16              // spec : 16x oversampling clock (RX sampling)
+    parameter   CLK_FREQ    = 50_000_000    ,   // system clock (Hz)
+    parameter   BAUD_RATE   = 115_200       ,   // baud rate (bps)
+    parameter   OSR         = 16                // oversampling ratio
 )(
-    // port list
-    clr_n           ,   // active low(negative) reset
-    clk             ,   // clock signal
-    i_addr           ,   // generic register address
-    i_wdata          ,   // generic register write data
-    i_wr             ,   // generic register write strobe
-    i_rd             ,   // generic register read strobe
-    o_rdata          ,   // generic register read data
-    o_intr           ,   // combined interrupt : TX Empty/RX Full/Frame Err/Overrun Err
-    o_txd            ,   // UART serial transmit pin
-    i_rxd                // UART serial receive pin
+    clr_n           ,   // async reset, active low
+    clk             ,   // system clock
+    i_addr          ,   // register address
+    i_wdata         ,   // register write data
+    i_wr            ,   // register write strobe
+    i_rd            ,   // register read strobe
+    o_rdata         ,   // register read data
+    o_intr          ,   // combined interrupt
+    o_txd           ,   // UART serial TX
+    i_rxd               // UART serial RX
 );
 
-// port declaration and IO direction
 input           clr_n       ;
 input           clk         ;
 input   [3:0]   i_addr      ;
@@ -30,108 +36,105 @@ output          o_intr      ;
 output          o_txd       ;
 input           i_rxd       ;
 
-// internal wires : baud generator
 wire            osr_tick        ;
 
-// internal wires : TX path
 wire            tx_push         ;
 wire    [7:0]   tx_wdata        ;
+wire            tx_fifo_rd      ;
+wire    [7:0]   tx_fifo_rdata   ;
 wire            tx_fifo_full    ;
 wire            tx_fifo_empty   ;
-wire    [7:0]   tx_fifo_rdata   ;
-wire            tx_fifo_rd      ;
 wire            tx_busy         ;
 
-// internal wires : RX path
+wire            rx_fifo_wr      ;
+wire    [7:0]   rx_fifo_wdata   ;
 wire            rx_pop          ;
 wire    [7:0]   rx_fifo_rdata   ;
 wire            rx_fifo_full    ;
 wire            rx_fifo_empty   ;
-wire            rx_fifo_wr      ;
-wire    [7:0]   rx_fifo_wdata   ;
 wire            frame_err       ;
 wire            overrun_err     ;
 
 // ----------------------------------------------------------------------
-// U0 : 16x oversampling baud rate generator
+// U0 : oversampling tick generator
 // ----------------------------------------------------------------------
 _BAUD_GEN_16X #(
-    .CLK_FREQ   ( CLK_FREQ      ),
-    .BAUD_RATE  ( BAUD_RATE     ),
-    .OSR        ( OSR           )
+    .CLK_FREQ       ( CLK_FREQ      ),
+    .BAUD_RATE      ( BAUD_RATE     ),
+    .OSR            ( OSR           )
 ) U0_BAUD_GEN (
-    .clr_n      ( clr_n         ),
-    .clk        ( clk           ),
-    .o_osr_tick ( osr_tick      )
+    .clr_n          ( clr_n         ),
+    .clk            ( clk           ),
+    .o_osr_tick     ( osr_tick      )
 );
 
 // ----------------------------------------------------------------------
-// U1 : TX FIFO (8-depth x 8-bit, synchronous, single clock domain)
+// U1 : TX FIFO
 // ----------------------------------------------------------------------
 _SYNC_FIFO_8x8 U1_TX_FIFO (
-    .clr_n      ( clr_n         ),
-    .clk        ( clk           ),
-    .i_wr       ( tx_push       ),
-    .i_rd       ( tx_fifo_rd    ),
-    .i_data     ( tx_wdata      ),
-    .o_data     ( tx_fifo_rdata ),
-    .o_full     ( tx_fifo_full  ),
-    .o_empty    ( tx_fifo_empty ),
-    .o_count    (               ),
-    .o_overrun  (               )
+    .clr_n          ( clr_n         ),
+    .clk            ( clk           ),
+    .i_wr           ( tx_push       ),
+    .i_rd           ( tx_fifo_rd    ),
+    .i_data         ( tx_wdata      ),
+    .o_data         ( tx_fifo_rdata ),
+    .o_full         ( tx_fifo_full  ),
+    .o_empty        ( tx_fifo_empty ),
+    .o_count        (               ),
+    .o_overrun      (               )
 );
 
 // ----------------------------------------------------------------------
-// U2 : UART transmitter (start-data-stop shifter, driven by TX FIFO)
+// U2 : transmitter
 // ----------------------------------------------------------------------
 _UART_TX #(
-    .OSR         ( OSR           )
+    .OSR            ( OSR           )
 ) U2_UART_TX (
-    .clr_n       ( clr_n         ),
-    .clk         ( clk           ),
-    .i_osr_tick  ( osr_tick      ),
-    .i_fifo_empty( tx_fifo_empty ),
-    .i_fifo_data ( tx_fifo_rdata ),
-    .o_fifo_rd   ( tx_fifo_rd    ),
-    .o_txd       ( o_txd         ),
-    .o_tx_busy   ( tx_busy       )
+    .clr_n          ( clr_n         ),
+    .clk            ( clk           ),
+    .i_osr_tick     ( osr_tick      ),
+    .i_fifo_empty   ( tx_fifo_empty ),
+    .i_fifo_data    ( tx_fifo_rdata ),
+    .o_fifo_rd      ( tx_fifo_rd    ),
+    .o_txd          ( o_txd         ),
+    .o_tx_busy      ( tx_busy       )
 );
 
 // ----------------------------------------------------------------------
-// U3 : RX FIFO (8-depth x 8-bit, synchronous, single clock domain)
+// U3 : RX FIFO
 // ----------------------------------------------------------------------
 _SYNC_FIFO_8x8 U3_RX_FIFO (
-    .clr_n      ( clr_n         ),
-    .clk        ( clk           ),
-    .i_wr       ( rx_fifo_wr    ),
-    .i_rd       ( rx_pop        ),
-    .i_data     ( rx_fifo_wdata ),
-    .o_data     ( rx_fifo_rdata ),
-    .o_full     ( rx_fifo_full  ),
-    .o_empty    ( rx_fifo_empty ),
-    .o_count    (               ),
-    .o_overrun  (               )
+    .clr_n          ( clr_n         ),
+    .clk            ( clk           ),
+    .i_wr           ( rx_fifo_wr    ),
+    .i_rd           ( rx_pop        ),
+    .i_data         ( rx_fifo_wdata ),
+    .o_data         ( rx_fifo_rdata ),
+    .o_full         ( rx_fifo_full  ),
+    .o_empty        ( rx_fifo_empty ),
+    .o_count        (               ),
+    .o_overrun      (               )
 );
 
 // ----------------------------------------------------------------------
-// U4 : UART receiver (16x oversampled start-data-stop recovery)
+// U4 : receiver
 // ----------------------------------------------------------------------
 _UART_RX #(
-    .OSR           ( OSR           )
+    .OSR            ( OSR           )
 ) U4_UART_RX (
-    .clr_n         ( clr_n         ),
-    .clk           ( clk           ),
-    .i_osr_tick    ( osr_tick      ),
-    .i_rxd         ( i_rxd         ),
-    .i_fifo_full   ( rx_fifo_full  ),
-    .o_fifo_wr     ( rx_fifo_wr    ),
-    .o_fifo_data   ( rx_fifo_wdata ),
-    .o_frame_err   ( frame_err     ),
-    .o_overrun_err ( overrun_err   )
+    .clr_n          ( clr_n         ),
+    .clk            ( clk           ),
+    .i_osr_tick     ( osr_tick      ),
+    .i_rxd          ( i_rxd         ),
+    .i_fifo_full    ( rx_fifo_full  ),
+    .o_fifo_wr      ( rx_fifo_wr    ),
+    .o_fifo_data    ( rx_fifo_wdata ),
+    .o_frame_err    ( frame_err     ),
+    .o_overrun_err  ( overrun_err   )
 );
 
 // ----------------------------------------------------------------------
-// U5 : generic register R/W interface (an APB wrapper can sit on top)
+// U5 : register interface
 // ----------------------------------------------------------------------
 _UART_REG_IF U5_REG_IF (
     .clr_n          ( clr_n         ),

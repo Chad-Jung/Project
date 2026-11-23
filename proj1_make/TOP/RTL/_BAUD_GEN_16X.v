@@ -1,51 +1,63 @@
 `timescale 1ns / 1ps
 
+// ======================================================================
+// _BAUD_GEN_16X : oversampling tick generator
+//   DIVISOR = CLK_FREQ / (BAUD_RATE * OSR)     (integer division, spec 9)
+//   o_osr_tick : 1-clk pulse every DIVISOR clocks (BAUD_RATE x OSR)
+//   ex) 50MHz, 115200, 16 -> DIVISOR = 27 -> 115,740.7 bps (+0.47%)
+// ======================================================================
 module _BAUD_GEN_16X #(
-    parameter   CLK_FREQ    = 50_000_000  ,   // system clock frequency (Hz)
-    parameter   BAUD_RATE   = 115_200     ,   // target baud rate (bps)
-    parameter   OSR         = 16              // oversampling ratio (spec : 16x)
+    parameter   CLK_FREQ    = 50_000_000    ,   // system clock frequency (Hz)
+    parameter   BAUD_RATE   = 115_200       ,   // target baud rate (bps)
+    parameter   OSR         = 16                // oversampling ratio
 )(
-    // port list
-    clr_n           ,   // active low(negative) reset
-    clk             ,   // clock signal
-    o_osr_tick           // 1-clock pulse at 16x oversampling rate (BAUD_RATE * OSR)
+    clr_n           ,   // async reset, active low
+    clk             ,   // system clock
+    o_osr_tick          // oversample tick (1-clk pulse)
 );
 
-// port declaration and IO direction
 input           clr_n       ;
 input           clk         ;
 output          o_osr_tick  ;
 
-// type overriding
 reg             o_osr_tick  ;
 
-// local parameters for the divider
-localparam  DIVISOR = CLK_FREQ / ( BAUD_RATE * OSR )   ;   // clk cycles per oversample tick
-localparam  CW       = 16                               ;   // counter width (wide enough for any practical DIVISOR)
+// ----------------------------------------------------------------------
+// divider geometry
+// ----------------------------------------------------------------------
+localparam  DIVISOR = CLK_FREQ / ( BAUD_RATE * OSR )    ;
+localparam  CW      = cw(DIVISOR)                        ;
 
-// divider counter
-reg     [CW-1:0]   div_cnt     ;
+// bits needed to count 0 ~ (n-1), minimum 1
+function integer cw;
+    input integer n;
+    integer v;
+    begin
+        cw = 1;
+        for ( v = 2; v < n; v = v * 2 ) cw = cw + 1;
+    end
+endfunction
+
+reg     [CW-1:0]    div_cnt     ;
+wire                div_last    = ( div_cnt == DIVISOR - 1 ) ;
 
 // ----------------------------------------------------------------------
-// Process 1 : divider counter (sequential)
-// Counts system clock cycles, wraps every DIVISOR cycles
+// divider counter : 0 -> DIVISOR-1 -> 0 ...
 // ----------------------------------------------------------------------
 always @(posedge clk or negedge clr_n)
 begin
-    if      ( ~clr_n )                          div_cnt <= {CW{1'b0}}     ; // active low | async reset to 0
-    else if ( div_cnt == (DIVISOR - 1) )        div_cnt <= {CW{1'b0}}     ; // wrap at DIVISOR
-    else                                         div_cnt <= div_cnt + 1'b1; // count up
+    if      ( ~clr_n )      div_cnt <= {CW{1'b0}}       ;
+    else if ( div_last )    div_cnt <= {CW{1'b0}}       ;
+    else                    div_cnt <= div_cnt + 1'b1   ;
 end
 
 // ----------------------------------------------------------------------
-// Process 2 : oversample tick register (sequential)
-// Pulses one clk cycle each time the divider wraps (16x baud rate)
+// registered tick : one clock wide, once per DIVISOR clocks
 // ----------------------------------------------------------------------
 always @(posedge clk or negedge clr_n)
 begin
-    if      ( ~clr_n )                          o_osr_tick <= 1'b0        ; // active low | async reset
-    else if ( div_cnt == (DIVISOR - 1) )        o_osr_tick <= 1'b1        ; // generate 1-cycle tick
-    else                                         o_osr_tick <= 1'b0        ; // hold low otherwise
+    if      ( ~clr_n )      o_osr_tick <= 1'b0      ;
+    else                    o_osr_tick <= div_last  ;
 end
 
 endmodule
