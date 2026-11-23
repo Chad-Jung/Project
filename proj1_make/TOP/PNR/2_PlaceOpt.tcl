@@ -28,6 +28,9 @@ setLayerPreference pinDensityMap -isVisible 0
 # Placement Optimization 
 place_opt_design
 
+# Tie cells :: constant-1 RN pins (DFFNSRX1) -> TIEHI
+addTieHiLo -cell "TIEHI TIELO" -prefix LTIE
+
 # Early GlobalRoute :: analisys of Congestion and Timing after Placement 
 earlyGlobalRoute
 reportCongestion -hotSpot
