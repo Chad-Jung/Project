@@ -17,17 +17,17 @@ xrun -64bit \
      -profthread \
      -gui \
      +libext+.v \
-     -incdir ../../RTL \
+     -incdir ../../RTL/UART \
      -incdir ../TESTBENCH \
-     -y ../../RTL \
+     -y ../../RTL/UART \
      -y ../TESTBENCH \
      ../TESTBENCH/tb_UART_TOP.v \
-     ../../RTL/_UART_TOP.v \
-     ../../RTL/_BAUD_GEN_16X.v \
-     ../../RTL/_SYNC_FIFO_8x8.v \
-     ../../RTL/_UART_TX.v \
-     ../../RTL/_UART_RX.v \
-     ../../RTL/_UART_REG_IF.v \
+     ../../RTL/UART/_UART_TOP.v \
+     ../../RTL/UART/_BAUD_GEN_16X.v \
+     ../../RTL/UART/_SYNC_FIFO_8x8.v \
+     ../../RTL/UART/_UART_TX.v \
+     ../../RTL/UART/_UART_RX.v \
+     ../../RTL/UART/_UART_REG_IF.v \
      /GPDK045/digital/giolib045_v3.5/vlog/pads_FF_s1vg.v \
      /GPDK045/digital/gsclib045_all_v4.4/gsclib045_svt_v4.4/gsclib045/verilog/slow_vdd1v0_basicCells.v \
      -l func_sim.log
