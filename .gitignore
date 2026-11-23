@@ -29,3 +29,7 @@ xmprof.out
 verilog.dump
 proj1_make/TOP/SIM/*/dump/*
 !proj1_make/TOP/SIM/*/dump/.gitkeep
+
+# Equivalence check outputs
+proj1_make/TOP/EC/log/*
+!proj1_make/TOP/EC/log/.gitkeep
