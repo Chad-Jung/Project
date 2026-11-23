@@ -10,10 +10,10 @@ set PDK  ../../../../../SoC/GPDK045/digital
 set SYN  ../../SYN/mapped
 
 # max library = worst corner (setup), min library = best corner (hold)
-read_lib -max $PDK/gsclib045_all_v4.4/gsclib045/timing/slow_vdd1v0_basicCells.lib \
-              $PDK/giolib045_v3.5/timing/pads_SS_s1vg.lib \
-         -min $PDK/gsclib045_all_v4.4/gsclib045/timing/fast_vdd1v0_basicCells.lib \
-              $PDK/giolib045_v3.5/timing/pads_SS_s1vg.lib
+read_lib -max [list $PDK/gsclib045_all_v4.4/gsclib045/timing/slow_vdd1v0_basicCells.lib \
+                    $PDK/giolib045_v3.5/timing/pads_SS_s1vg.lib] \
+         -min [list $PDK/gsclib045_all_v4.4/gsclib045/timing/fast_vdd1v0_basicCells.lib \
+                    $PDK/giolib045_v3.5/timing/pads_SS_s1vg.lib]
 
 read_verilog $SYN/_UART_TOP_syn_final.v
 set_top_module _UART_TOP
