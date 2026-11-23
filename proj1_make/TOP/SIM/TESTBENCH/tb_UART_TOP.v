@@ -359,6 +359,10 @@ module tb_UART_TOP;
         #(BIT_NS);                                      // same wait as the stop-bit measurement above
 `endif
         #(BIT_NS);
+        // re-align to the middle of a clock cycle : the waits above end on a txd
+        // edge, which coincides with a clock edge in RTL (zero delay) but follows
+        // it by clk-to-q in gate-level simulation
+        @(negedge clk);
         reg_read(ADDR_RX_DATA, rbyte);  check("RX byte", rbyte, 8'h55);
 
         // --------------------------------------------------------------
