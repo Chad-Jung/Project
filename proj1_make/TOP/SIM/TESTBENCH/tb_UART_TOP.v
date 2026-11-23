@@ -99,7 +99,9 @@ module tb_UART_TOP;
   `endif
   `ifdef sdf_gate
         // pre-layout : synthesized netlist + cell delays (SDF copied into SIM/PRE by run_pre.tcl)
-        $sdf_annotate("./_UART_TOP_delays.sdf", tb_UART_TOP.DUT);
+        // SDF from Genus holds only the max (worst corner) field "(::max)",
+        // so the MAXIMUM field must be selected (default TYPICAL is empty)
+        $sdf_annotate("./_UART_TOP_delays.sdf", tb_UART_TOP.DUT, , "sdf_gate.log", "MAXIMUM");
         $shm_open("./dump/tb_UART_TOP_sdf_gate");
         $shm_probe(tb_UART_TOP, "AC");
   `endif
