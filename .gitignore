@@ -33,6 +33,8 @@ proj1_make/TOP/SIM/*/dump/*
 # Equivalence check outputs
 proj1_make/TOP/EC/log/*
 !proj1_make/TOP/EC/log/.gitkeep
+proj1_make/TOP/EC/POST/log/*
+!proj1_make/TOP/EC/POST/log/.gitkeep
 
 # Pre-layout sim : copied netlist / SDF (library-derived) and dumps
 proj1_make/TOP/SIM/PRE/*.v
