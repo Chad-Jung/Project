@@ -74,6 +74,8 @@ optDesign -postRoute -setup; # 0 : Optimization and resolve the Setup Violation
 setAnalysisMode -analysisType single -checkType hold
 #setAnalysisMode -analysisType bcwc -checkType hold
 optDesign -postRoute -hold; # 1 : Optimization and resolve the Hold Violation 
+# 2nd pass : in->out feedthrough (i_addr -> o_rdata) was still -8ps after the 1st pass
+optDesign -postRoute -hold
 
 timeDesign -postRoute 	; # Setup time report
 timeDesign -postRoute -hold; # Hold time report
