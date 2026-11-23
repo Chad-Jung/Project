@@ -29,10 +29,3 @@ xmprof.out
 verilog.dump
 proj1_make/TOP/SIM/*/dump/*
 !proj1_make/TOP/SIM/*/dump/.gitkeep
-
-# Course (textbook) lab scripts adapted for this project: kept local / on the
-# server only, not published. Re-written public versions will be added later.
-proj1_make/TOP/SYN/*.tcl
-proj1_make/TOP/SYN/script/
-proj1_make/TOP/SYN/cons/
-proj1_make/TOP/SIM/FUNCTION/*.tcl
