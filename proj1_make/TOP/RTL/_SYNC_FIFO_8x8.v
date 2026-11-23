@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module sync_fifo (
+module _SYNC_FIFO_8x8 (
     // port list
     clr_n           ,   // active low(negative) reset
     clk             ,   // clock signal
@@ -30,7 +30,7 @@ output          o_overrun   ;
 reg     [7:0]   o_data      ;
 reg             o_overrun   ;
 
-// local parametders for FIFO geometry
+// local parameters for FIFO geometry
 localparam DEPTH = 8   ;   // FIFO depth (8-depth as per spec)
 localparam AW    = 3   ;   // address width : log2(DEPTH)
 
