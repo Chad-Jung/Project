@@ -115,6 +115,18 @@ set_operating_conditions  -max_library [get_libs slow_vdd1v0_basicCells.lib:slow
 #set_isolate_ports [all_outputs]
 
 set_ideal_network [get_ports "clk clr_n"]
+
+##############################
+##### Asynchronous inputs ####
+##############################
+# i_rxd : asynchronous serial input, re-timed by the 2-flop synchronizer in
+#         _UART_RX (rxd_meta -> rxd_s) -> no clock-based timing check
+set_false_path -from [get_ports i_rxd]
+
+# clr_n : asynchronous reset (spec 6). Integration requirement : the SoC
+#         reset controller releases clr_n synchronously to clk, so recovery /
+#         removal are guaranteed at the SoC level, not at the UART port
+set_false_path -from [get_ports clr_n]
 #set_ideal_network [get_pins u_cmsdk_mcu_clkctrl/hrst_reg_reg/Q]
 #set_ideal_network [get_pins u_cmsdk_mcu_clkctrl/prst_reg_reg/Q]
 

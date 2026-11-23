@@ -30,8 +30,9 @@ report_analysis_coverage                            > ./report/01_analysis_cover
 report_analysis_coverage -check_type data_setup -verbose untested -exclude_untested const > ./report/02_coverage_untested.rpt
 
 # worst paths : setup (late) and hold (early)
-report_timing -late  -max_paths 10                  > ./report/03_timing_setup.rpt
-report_timing -early -max_paths 10                  > ./report/04_timing_hold.rpt
+report_timing -check_type setup   -max_paths 10    > ./report/03_timing_setup.rpt
+report_timing -check_type hold    -max_paths 10    > ./report/04_timing_hold.rpt
+report_timing -check_type removal -max_paths 10    > ./report/05_timing_removal.rpt
 
 ##################
 #### FILE OUT ####
