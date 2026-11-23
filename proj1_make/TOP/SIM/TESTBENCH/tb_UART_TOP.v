@@ -60,6 +60,7 @@ module tb_UART_TOP;
     reg     [7:0]   rbyte   ;
     reg     [7:0]   status  ;
     reg     [7:0]   pattern [0:15] ;
+    real            t_edge, t_now  ;
 
     // ------------------------------------------------------------------
     // DUT
@@ -253,7 +254,9 @@ module tb_UART_TOP;
         for ( i = 0; i < 10; i = i + 1 ) reg_write(ADDR_TX_DATA, pattern[i]);
         // 1 byte in the shifter + 8 in the FIFO -> full, 10th write is dropped
         reg_read(ADDR_STATUS, status);  check("STATUS tx_full", status & 8'h02, 8'h02);
+        i = mon_cnt;
         wait_tx_idle;
+        check("frames sent (10th write ignored)", mon_cnt - i, 8'd9);
         // 9 frames sent, RX FIFO holds 8 -> 9th is an overrun
         reg_read(ADDR_STATUS, status);  check("STATUS rx_full+overrun", status & 8'h28, 8'h28);
         check("intr (overrun)", {7'd0, intr}, 8'h01);
@@ -309,10 +312,104 @@ module tb_UART_TOP;
         reg_write(ADDR_INT_EN, 8'h00);
 
         // --------------------------------------------------------------
+        // spec 9 : DIVISOR = 27 -> 1 bit = 16 ticks = 432 clk
+        // spec 7.1 : start / data / stop bits are 16 osr ticks each
+        //   0x55 = 0101_0101 -> every data bit toggles the line
+        $display("--- T9 : TX bit timing (spec 7.1 / 9)");
+        reg_write(ADDR_TX_DATA, 8'h55);
+        @(negedge txd);  t_edge = $realtime;            // start bit begins
+        @(posedge txd);  t_now  = $realtime;            // D0 (=1) begins
+        // start bit : 16 ticks counted from the FSM entering S_START; the
+        // first tick may come 1..DIVISOR clocks later (free-running baud gen)
+        if ( (t_now - t_edge) > BIT_NS || (t_now - t_edge) <= BIT_NS - DIVISOR*CLK_PERIOD ) begin
+            $display("[%0t] [FAIL] start bit width %0.0f ns", $time, t_now - t_edge);
+            errors = errors + 1;
+        end
+        else $display("[%0t] [PASS] start bit width %0.0f ns (15~16 ticks)", $time, t_now - t_edge);
+        for ( i = 1; i < 8; i = i + 1 ) begin           // D1 .. D7 edges
+            t_edge = t_now;
+            @(txd);  t_now = $realtime;
+            if ( t_now - t_edge != BIT_NS ) begin
+                $display("[%0t] [FAIL] data bit width %0.0f ns, expected %0d", $time, t_now - t_edge, BIT_NS);
+                errors = errors + 1;
+            end
+        end
+        t_edge = t_now;                                 // D7 (=0) begins
+        @(posedge txd);  t_now = $realtime;             // stop bit begins
+        if ( t_now - t_edge != BIT_NS ) begin
+            $display("[%0t] [FAIL] D7 width %0.0f ns", $time, t_now - t_edge);
+            errors = errors + 1;
+        end
+        else $display("[%0t] [PASS] data bit width = %0d ns (16 x %0d clk)", $time, BIT_NS, DIVISOR);
+        t_edge = t_now;
+        wait ( DUT.tx_busy == 1'b0 );  t_now = $realtime;
+        if ( (t_now - t_edge) < BIT_NS - CLK_PERIOD || (t_now - t_edge) > BIT_NS + CLK_PERIOD ) begin
+            $display("[%0t] [FAIL] stop bit width %0.0f ns", $time, t_now - t_edge);
+            errors = errors + 1;
+        end
+        else $display("[%0t] [PASS] stop bit width %0.0f ns", $time, t_now - t_edge);
+        #(BIT_NS);
+        reg_read(ADDR_RX_DATA, rbyte);  check("RX byte", rbyte, 8'h55);
+
+        // --------------------------------------------------------------
+        $display("--- T10 : register map details (spec 8)");
+        // RX_DATA read while empty is ignored (no pointer change)
+        reg_read(ADDR_RX_DATA, rbyte);
+        reg_read(ADDR_STATUS, status);  check("RX_DATA read when empty -> still empty", status, 8'h05);
+        check("RX FIFO count after empty read", {4'd0, DUT.U3_RX_FIFO.o_count}, 8'd0);
+        // INT_EN : only [3:0] are implemented
+        reg_write(ADDR_INT_EN, 8'hFA);
+        reg_read(ADDR_INT_EN, rbyte);   check("INT_EN readback [3:0] only", rbyte, 8'h0A);
+        reg_write(ADDR_INT_EN, 8'h00);
+        // write-only / undefined addresses read as 0
+        reg_read(ADDR_TX_DATA, rbyte);  check("TX_DATA reads 0", rbyte, 8'h00);
+        reg_read(ADDR_INT_CLR, rbyte);  check("INT_CLR reads 0", rbyte, 8'h00);
+        reg_read(4'hF, rbyte);          check("undefined addr reads 0", rbyte, 8'h00);
+        // writes to read-only / undefined addresses have no effect
+        reg_write(ADDR_STATUS, 8'hFF);
+        reg_write(4'hF, 8'hFF);
+        reg_read(ADDR_STATUS, status);  check("STATUS unchanged by writes", status, 8'h05);
+        reg_read(ADDR_INT_EN, rbyte);   check("INT_EN unchanged by other writes", rbyte, 8'h00);
+
+        // --------------------------------------------------------------
+        $display("--- T11 : interrupt sources and W1C (spec 8, 10)");
+        // RX full interrupt
+        reg_write(ADDR_INT_EN, 8'b0000_0010);
+        for ( i = 0; i < 8; i = i + 1 ) reg_write(ADDR_TX_DATA, pattern[i]);
+        wait_tx_idle;
+        check("intr (rx full)", {7'd0, intr}, 8'h01);
+        reg_read(ADDR_RX_DATA, rbyte);
+        @(posedge clk); #1;
+        check("intr low after one pop", {7'd0, intr}, 8'h00);
+        for ( i = 1; i < 8; i = i + 1 ) reg_read(ADDR_RX_DATA, rbyte);
+        // both sticky errors set, then cleared one at a time
+        loopback = 1'b0;
+        ext_send(8'h00, BIT_NS, 1'b0);                  // framing error
+        #(BIT_NS);
+        for ( i = 0; i < 9; i = i + 1 ) ext_send(pattern[i], BIT_NS, 1'b1);   // 9th -> overrun
+        #(BIT_NS*2);
+        reg_read(ADDR_STATUS, status);  check("both sticky errors set", status & 8'h30, 8'h30);
+        reg_write(ADDR_INT_EN, 8'b0000_1100);
+        reg_write(ADDR_INT_CLR, 8'b0000_0001);          // clear frame_err only
+        reg_read(ADDR_STATUS, status);  check("W1C bit0 clears frame_err only", status & 8'h30, 8'h20);
+        check("intr still high (overrun)", {7'd0, intr}, 8'h01);
+        reg_write(ADDR_INT_CLR, 8'b0000_0000);          // writing 0 does nothing
+        reg_read(ADDR_STATUS, status);  check("W1C with 0 keeps overrun", status & 8'h30, 8'h20);
+        reg_write(ADDR_INT_CLR, 8'b0000_0010);
+        reg_read(ADDR_STATUS, status);  check("W1C bit1 clears overrun", status & 8'h30, 8'h00);
+        check("intr low", {7'd0, intr}, 8'h00);
+        for ( i = 0; i < 8; i = i + 1 ) reg_read(ADDR_RX_DATA, rbyte);
+        reg_write(ADDR_INT_EN, 8'h00);
+        reg_read(ADDR_STATUS, status);  check("STATUS final", status, 8'h05);
+
+        // --------------------------------------------------------------
         $display("==========================================================");
         if ( errors == 0 ) $display(" TEST PASSED");
         else               $display(" TEST FAILED : %0d error(s)", errors);
         $display("==========================================================");
+`ifdef function_sim
+        $stop;                                          // GUI : stay open to inspect the waveform
+`endif
         $finish;
     end
 
