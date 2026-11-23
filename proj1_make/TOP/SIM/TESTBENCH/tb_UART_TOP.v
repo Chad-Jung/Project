@@ -28,6 +28,7 @@ module tb_UART_TOP;
 
     localparam  DIVISOR     = CLK_FREQ / ( BAUD_RATE * OSR )    ;
     localparam  BIT_NS      = OSR * DIVISOR * CLK_PERIOD        ;   // one UART bit time in this sim
+    localparam  TOL_NS      = 1                                 ;   // gate level : rise/fall clk-to-q difference
 
     // register map
     localparam  ADDR_TX_DATA = 4'h0 ;
@@ -97,9 +98,10 @@ module tb_UART_TOP;
         $shm_probe("AS");
   `endif
   `ifdef sdf_gate
-        $sdf_annotate("../../SYN/mapped/_UART_TOP_delays.sdf", DUT, , "sdf.log", "MAXIMUM");
-        $shm_open("dump/gate_sim.shm");
-        $shm_probe("AS");
+        // pre-layout : synthesized netlist + cell delays (SDF copied into SIM/PRE by run_pre.tcl)
+        $sdf_annotate("./_UART_TOP_delays.sdf", tb_UART_TOP.DUT);
+        $shm_open("./dump/tb_UART_TOP_sdf_gate");
+        $shm_probe(tb_UART_TOP, "AC");
   `endif
 `endif
     end
@@ -321,7 +323,7 @@ module tb_UART_TOP;
         @(posedge txd);  t_now  = $realtime;            // D0 (=1) begins
         // start bit : 16 ticks counted from the FSM entering S_START; the
         // first tick may come 1..DIVISOR clocks later (free-running baud gen)
-        if ( (t_now - t_edge) > BIT_NS || (t_now - t_edge) <= BIT_NS - DIVISOR*CLK_PERIOD ) begin
+        if ( (t_now - t_edge) > BIT_NS + TOL_NS || (t_now - t_edge) <= BIT_NS - DIVISOR*CLK_PERIOD ) begin
             $display("[%0t] [FAIL] start bit width %0.0f ns", $time, t_now - t_edge);
             errors = errors + 1;
         end
@@ -329,18 +331,20 @@ module tb_UART_TOP;
         for ( i = 1; i < 8; i = i + 1 ) begin           // D1 .. D7 edges
             t_edge = t_now;
             @(txd);  t_now = $realtime;
-            if ( t_now - t_edge != BIT_NS ) begin
+            if ( (t_now - t_edge) > BIT_NS + TOL_NS || (t_now - t_edge) < BIT_NS - TOL_NS ) begin
                 $display("[%0t] [FAIL] data bit width %0.0f ns, expected %0d", $time, t_now - t_edge, BIT_NS);
                 errors = errors + 1;
             end
         end
         t_edge = t_now;                                 // D7 (=0) begins
         @(posedge txd);  t_now = $realtime;             // stop bit begins
-        if ( t_now - t_edge != BIT_NS ) begin
+        if ( (t_now - t_edge) > BIT_NS + TOL_NS || (t_now - t_edge) < BIT_NS - TOL_NS ) begin
             $display("[%0t] [FAIL] D7 width %0.0f ns", $time, t_now - t_edge);
             errors = errors + 1;
         end
         else $display("[%0t] [PASS] data bit width = %0d ns (16 x %0d clk)", $time, BIT_NS, DIVISOR);
+`ifndef sdf_gate
+        // internal signal : RTL only (net names change after synthesis)
         t_edge = t_now;
         wait ( DUT.tx_busy == 1'b0 );  t_now = $realtime;
         if ( (t_now - t_edge) < BIT_NS - CLK_PERIOD || (t_now - t_edge) > BIT_NS + CLK_PERIOD ) begin
@@ -348,6 +352,9 @@ module tb_UART_TOP;
             errors = errors + 1;
         end
         else $display("[%0t] [PASS] stop bit width %0.0f ns", $time, t_now - t_edge);
+`else
+        #(BIT_NS);                                      // same wait as the stop-bit measurement above
+`endif
         #(BIT_NS);
         reg_read(ADDR_RX_DATA, rbyte);  check("RX byte", rbyte, 8'h55);
 
@@ -356,7 +363,10 @@ module tb_UART_TOP;
         // RX_DATA read while empty is ignored (no pointer change)
         reg_read(ADDR_RX_DATA, rbyte);
         reg_read(ADDR_STATUS, status);  check("RX_DATA read when empty -> still empty", status, 8'h05);
+`ifndef sdf_gate
+        // internal signal : RTL only (unused FIFO port is removed by synthesis)
         check("RX FIFO count after empty read", {4'd0, DUT.U3_RX_FIFO.o_count}, 8'd0);
+`endif
         // INT_EN : only [3:0] are implemented
         reg_write(ADDR_INT_EN, 8'hFA);
         reg_read(ADDR_INT_EN, rbyte);   check("INT_EN readback [3:0] only", rbyte, 8'h0A);
