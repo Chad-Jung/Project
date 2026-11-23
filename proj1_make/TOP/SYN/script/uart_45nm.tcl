@@ -17,8 +17,8 @@ set RPT_DIR     "./report"
 set UNMAPPED_DIR   "./unmapped"
 set MAPPED_DIR     "./mapped"
 
-#GPDK 045 SVT  (server : /GPDK045, same path as SIM/FUNCTION/run_function.tcl)
-set GPDK_PATH    "/GPDK045/digital"
+#GPDK 045 SVT  (server : ~/SoC/GPDK045, the PDK used for the course lab - not copied into proj1)
+set GPDK_PATH    "$env(HOME)/SoC/GPDK045/digital"
 set STD_LIB_PATH "${GPDK_PATH}/gsclib045_all_v4.4/gsclib045/timing"
 set IO_LIB_PATH "${GPDK_PATH}/giolib045_v3.5/timing"
 set LEF_LIB_PATH "${GPDK_PATH}/gsclib045_all_v4.4/gsclib045/lef ${GPDK_PATH}/giolib045_v3.5/lef"
