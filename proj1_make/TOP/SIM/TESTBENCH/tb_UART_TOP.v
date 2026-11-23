@@ -160,8 +160,9 @@ module tb_UART_TOP;
             @(posedge clk); #1;
             addr = a; rd = 1'b1;
             @(posedge clk); #1;                         // RX FIFO o_data updates on this edge
-            d    = rdata;
             rd   = 1'b0;
+            #(CLK_PERIOD-2);                            // sample just before the next rising edge
+            d    = rdata;                               // (safe with gate-level clk-to-q / mux delays)
         end
     endtask
 
