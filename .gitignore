@@ -1,0 +1,31 @@
+# ------------------------------------------------------------------
+# PDK / tool outputs must not be published (GPDK045 is licensed IP).
+# Only RTL, testbenches and scripts are tracked.
+# ------------------------------------------------------------------
+
+# PDK itself (never copy into the repo)
+GPDK045/
+
+# Synthesis outputs (netlist / sdf / reports contain library data)
+proj1_make/TOP/SYN/log/*
+proj1_make/TOP/SYN/report/*
+proj1_make/TOP/SYN/unmapped/*
+proj1_make/TOP/SYN/mapped/*
+proj1_make/TOP/SYN/fv/*
+proj1_make/TOP/SYN/cds_syn_runtime
+proj1_make/TOP/SYN/genus.*
+!proj1_make/TOP/SYN/*/.gitkeep
+
+# Simulation outputs
+xcelium.d/
+INCA_libs/
+*.shm/
+*.vcd
+*.diag
+*.history
+*.log
+xrun.key
+xmprof.out
+verilog.dump
+proj1_make/TOP/SIM/*/dump/*
+!proj1_make/TOP/SIM/*/dump/.gitkeep
