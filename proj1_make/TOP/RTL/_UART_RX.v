@@ -98,7 +98,10 @@ begin
             else                                        next_state = S_DATA ;
         end
         S_STOP : begin
-            if      ( bit_done )                 next_state = S_IDLE    ; // stop bit period elapsed -> back to idle
+            // return to idle at the MIDDLE of the stop bit (right after it is sampled),
+            // not at its end : leaves half a bit of margin so a slightly faster
+            // transmitter's next start edge is not missed on back-to-back frames
+            if      ( mid_tick )                 next_state = S_IDLE    ; // stop bit sampled -> back to idle
             else                                   next_state = S_STOP    ;
         end
         default : next_state = S_IDLE ;
