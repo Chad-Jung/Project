@@ -22,6 +22,8 @@ report_clock_timing -type skew -nworst 5 > reports/clock/skew.rpt
 
 # Optimization of my design after CTS
 optDesign -postCTS 	; # Setup/DRV concurrently
+# Hold margin for post-route RC change (input->FIFO paths were -1ps at 0 target)
+setOptMode -holdTargetSlack 0.02
 optDesign -postCTS -hold ;# Only for hold violation
 timeDesign -postCTS -outDir reports/timing/postCTS
 timeDesign -postCTS -outDir reports/timing/postCTS -hold
