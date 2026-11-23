@@ -105,7 +105,7 @@ module tb_UART_TOP;
     end
 
     // ------------------------------------------------------------------
-    // TX line monitor (like cmsdk_uart_capture) : decodes o_txd frames
+    // TX line monitor : decodes o_txd frames
     // ------------------------------------------------------------------
     reg     [7:0]   mon_byte    ;
     reg     [7:0]   mon_buf [0:63] ;
