@@ -162,7 +162,7 @@ module tb_UART_TOP;
     endtask
 
     task check;
-        input   [255:0] name;
+        input   [8*48-1:0] name;   // up to 48 characters
         input   [7:0]   got;
         input   [7:0]   exp;
         begin
