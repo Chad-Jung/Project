@@ -37,3 +37,10 @@ proj1_make/TOP/EC/log/*
 # Pre-layout sim : copied netlist / SDF (library-derived) and dumps
 proj1_make/TOP/SIM/PRE/*.v
 proj1_make/TOP/SIM/PRE/*.sdf
+
+# STA outputs
+proj1_make/TOP/STA/*/report/*
+!proj1_make/TOP/STA/*/report/.gitkeep
+proj1_make/TOP/STA/*/*.sdf
+proj1_make/TOP/STA/*/tempus.*
+!proj1_make/TOP/STA/*/tempus.tcl
