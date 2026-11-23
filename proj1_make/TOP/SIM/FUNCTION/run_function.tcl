@@ -2,13 +2,12 @@
 # -access : Passed to the elaborator to provide read access to simulation objects
 # -gui : To invoke the xrun in gui mode
 # -mess : To display all to the messages in detail
-# -define : To enable `ifdef blocks in the testbench (function_sim -> $shm_open/$shm_probe)
+# -define : To provide SDF definition present in the testbench file
 # -v : To provide library in ".v" format
 # +libext : library extention
 # +libext+.v -y : xrun would compile .v files automatically in the specific folder decribed with -y option
 
-# Waveform is dumped to ./dump/function_sim.shm (see `ifdef function_sim in tb_UART_TOP.v)
-mkdir -p dump
+# Waveform is dumped to ./dump/function_sim.shm (`ifdef function_sim in ../TESTBENCH/tb_UART_TOP.v)
 xrun -64bit \
      +max_err_count+50 \
      +define+function_sim \
