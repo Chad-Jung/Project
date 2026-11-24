@@ -30,6 +30,9 @@ saveDesign -rc -def ChipFinish
 
 # Netlist  file : -flat options is useful to next tool stages
 saveNetlist -flat _UART_TOP.v
+# Hierarchical netlist for post-layout simulation :
+# Tempus SDF keeps the module hierarchy (U2_UART_TX/o_txd_reg), the flat netlist does not
+saveNetlist _UART_TOP_hier.v
 
 # SDF OUT, but I recommend to use sdf file which is from Tempus tool
 # SDF version 3.0 :: RECREM included in the SDF file
