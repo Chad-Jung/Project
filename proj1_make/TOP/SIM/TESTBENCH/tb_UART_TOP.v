@@ -5,7 +5,9 @@
 //
 // Common testbench for every simulation stage (TESTBENCH folder):
 //   - Function Simulation   : +define+function_sim   (RTL, no delay)
-//   - Pre/Post-layout Sim.  : +define+sdf_gate       (gate netlist + SDF)
+//   - Pre-layout Sim.       : +define+sdf_gate                 (syn netlist + Genus SDF)
+//   - Post-layout Sim.      : +define+sdf_gate+post_max         (PnR netlist + wst SDF)
+//                             +define+sdf_gate+post_min         (PnR netlist + bst SDF)
 //
 // Clock : design target 50MHz (20ns). Simulated pessimistically 30% faster
 //         -> 14ns period, same policy as the course (10ns target -> 7ns sim).
@@ -98,11 +100,21 @@ module tb_UART_TOP;
         $shm_probe("AS");
   `endif
   `ifdef sdf_gate
+    `ifdef post_max
+        // post-layout, worst corner : PnR netlist + Tempus SDF (FUNC_SS_WORST) + slow/SS cell models
+        $sdf_annotate("./_UART_TOP_post_wst.sdf", tb_UART_TOP.DUT, , "sdf_post_max.log", "MAXIMUM");
+        $shm_open("./dump/tb_UART_TOP_post_max");
+    `elsif post_min
+        // post-layout, best corner : PnR netlist + Tempus SDF (FUNC_FF_BEST) + fast/FF cell models
+        $sdf_annotate("./_UART_TOP_post_bst.sdf", tb_UART_TOP.DUT, , "sdf_post_min.log", "MINIMUM");
+        $shm_open("./dump/tb_UART_TOP_post_min");
+    `else
         // pre-layout : synthesized netlist + cell delays (SDF copied into SIM/PRE by run_pre.tcl)
         // SDF from Genus holds only the max (worst corner) field "(::max)",
         // so the MAXIMUM field must be selected (default TYPICAL is empty)
         $sdf_annotate("./_UART_TOP_delays.sdf", tb_UART_TOP.DUT, , "sdf_gate.log", "MAXIMUM");
         $shm_open("./dump/tb_UART_TOP_sdf_gate");
+    `endif
         $shm_probe(tb_UART_TOP, "AC");
   `endif
 `endif
