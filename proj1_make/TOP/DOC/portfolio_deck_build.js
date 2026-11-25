@@ -26,12 +26,12 @@ const DIM = {
 
 const THEME = {
   name: "UART Silicon",
-  headFontFace: "Malgun Gothic",
-  bodyFontFace: "Malgun Gothic",
+  headFontFace: process.env.FONT || "Malgun Gothic",
+  bodyFontFace: process.env.FONT || "Malgun Gothic",
   colors: {
-    dk1: "1B2329", lt1: "FFFFFF", dk2: "14232B", lt2: "EEF2F4",
-    accent1: "D9822B", accent2: "2A9D8F", accent3: "5B6B75", accent4: "C0392B",
-    accent5: "8FA3AD", accent6: "F2C14E", hlink: "2A9D8F", folHlink: "5B6B75",
+    dk1: "1E2328", lt1: "FFFFFF", dk2: "1F3A5F", lt2: "F2F4F6",
+    accent1: "C55A11", accent2: "2E7D4F", accent3: "5F6B76", accent4: "B03A2E",
+    accent5: "A6B1BB", accent6: "D9A441", hlink: "1F3A5F", folHlink: "5F6B76",
   },
 };
 const HEX = THEME.colors;
@@ -68,8 +68,8 @@ pres.defineSlideMaster({
   background: { color: C.background1 },
   margin: [0.5, 0.6, 0.6, 0.6],
   objects: [
-    { placeholder: { options: { name: "title", type: "title", x: MX, y: 0.3, w: 10.3, h: 0.75, fontSize: 28, bold: true, color: C.text2, valign: "middle", margin: 0, align: "left" }, text: "" } },
-    { text: { text: "UART IP · Cadence 45 nm Digital Flow", options: { x: MX, y: H - 0.42, w: 6, h: 0.3, fontSize: 10, color: C.accent3, margin: 0 } } },
+    { placeholder: { options: { name: "title", type: "title", x: MX, y: 0.32, w: W - 2 * MX, h: 0.7, fontSize: 24, bold: true, color: C.text2, valign: "middle", margin: 0, align: "left" }, text: "" } },
+    { text: { text: "YECHAN JUNG  |  UART IP Design Portfolio  |  Cadence 45 nm Digital Flow", options: { x: MX, y: H - 0.42, w: 8, h: 0.3, fontSize: 9.5, color: C.accent3, margin: 0 } } },
   ],
   slideNumber: { x: W - 1.1, y: H - 0.42, w: 0.5, h: 0.3, fontSize: 10, color: C.accent3, align: "right" },
 });
@@ -90,13 +90,24 @@ function img(slide, dir, file, x, y, w, h, opts = {}) {
   return g;
 }
 function tag(slide, label) { // requirement chip (deck motif)
-  slide.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: W - MX - 1.9, y: 0.42, w: 1.9, h: 0.5, rectRadius: 0.25, fill: { color: C.accent1 }, line: { type: "none" }, objectName: "req tag" });
+  slide.addShape(pres.shapes.RECTANGLE, { x: W - MX - 1.9, y: 0.42, w: 1.9, h: 0.5, rectRadius: 0.25, fill: { color: C.accent1 }, line: { type: "none" }, objectName: "req tag" });
   slide.addText(label, { x: W - MX - 1.9, y: 0.42, w: 1.9, h: 0.5, fontSize: 13, bold: true, color: C.background1, align: "center", valign: "middle", margin: 0, isTextBox: true });
 }
-function content(title, label, section) {
+function content(major, num, mid, sub, section) {
   const s = pres.addSlide({ masterName: "CONTENT", sectionTitle: section });
-  s.addText(title, { placeholder: "title" });
-  if (label) tag(s, label);
+  const head = (num ? num + ". " : "") + mid + (sub ? " - " + sub : "");
+  s.addText([{ text: major + "   ", options: { color: C.accent1 } }, { text: head, options: { color: C.text2 } }], { placeholder: "title" });
+  return s;
+}
+function toc(major, items, section, pic) {
+  const s = content(major, null, "Contents", null, section);
+  items.forEach((it, i) => {
+    const y = 1.35 + i * (5.2 / items.length);
+    s.addText(it[0], { x: MX, y, w: 0.7, h: 0.5, fontSize: 26, bold: true, color: C.accent1, margin: 0, valign: "top", isTextBox: true });
+    s.addText(it[1], { x: MX + 0.75, y, w: 5.6, h: 0.42, fontSize: 18, bold: true, color: C.text2, margin: 0, valign: "top", isTextBox: true });
+    s.addText(it[2], { x: MX + 0.75, y: y + 0.42, w: 5.6, h: 0.4, fontSize: 12.5, color: C.accent3, margin: 0, valign: "top", isTextBox: true });
+  });
+  if (pic) img(s, U, pic, 7.3, 1.35, 5.45, 5.3);
   return s;
 }
 function bullets(slide, items, x, y, w, h, size = 14) {
@@ -118,7 +129,7 @@ function table(slide, rows, x, y, w, colW, size = 12, opts = {}) {
   slide.addTable(data, Object.assign({ x, y, w, colW, border: { type: "solid", pt: 0.5, color: HEX.accent5 }, rowH: opts.rowH || 0.32 }, opts));
 }
 function stat(slide, x, y, w, h, value, label, color) {
-  slide.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w, h, rectRadius: 0.08, fill: { color: C.background2 }, line: { type: "none" }, objectName: "stat " + label });
+  slide.addShape(pres.shapes.RECTANGLE, { x, y, w, h, fill: { color: C.background1 }, line: { color: HEX.accent5, width: 0.75 }, objectName: "stat " + label });
   slide.addText(value, { x: x + 0.15, y: y + 0.12, w: w - 0.3, h: h * 0.55, fontSize: 26, bold: true, color: color || C.text2, margin: 0, valign: "middle", isTextBox: true });
   slide.addText(label, { x: x + 0.15, y: y + h * 0.62, w: w - 0.3, h: h * 0.3, fontSize: 12, color: C.accent3, margin: 0, valign: "top", isTextBox: true });
 }
@@ -127,11 +138,11 @@ function code(slide, text, x, y, w, h, size = 10.5) {
   slide.addText(text, { x: x + 0.15, y: y + 0.12, w: w - 0.3, h: h - 0.24, fontFace: MONO, fontSize: size, color: C.background2, valign: "top", margin: 0, isTextBox: true, paraSpaceAfter: 0 });
 }
 function note(slide, text, x, y, w, h, color) {
-  slide.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w, h, rectRadius: 0.08, fill: { color: color || C.background2 }, line: { type: "none" }, objectName: "note" });
+  slide.addShape(pres.shapes.RECTANGLE, { x, y, w, h, fill: { color: color || C.background2 }, line: { type: "none" }, objectName: "note" });
   slide.addText(text, { x: x + 0.2, y, w: w - 0.4, h, fontSize: 13, color: C.text1, valign: "middle", margin: 0, isTextBox: true });
 }
 function pill(slide, x, y, w, text, color) {
-  slide.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w, h: 0.42, rectRadius: 0.21, fill: { color: color || C.accent2 }, line: { type: "none" }, objectName: "pill" });
+  slide.addShape(pres.shapes.RECTANGLE, { x, y, w, h: 0.42, rectRadius: 0.21, fill: { color: color || C.accent2 }, line: { type: "none" }, objectName: "pill" });
   slide.addText(text, { x, y, w, h: 0.42, fontSize: 12, bold: true, color: C.background1, align: "center", valign: "middle", margin: 0, isTextBox: true });
 }
 
@@ -155,7 +166,7 @@ s.addImage({ path: U + COVER, ...fit(COVER, 8.45, 1.25, 4.2, 4.6), altText: "Cov
 s.addText(MODE === "FE" ? "블록 다이어그램" : "최종 레이아웃 (Chip Finish)", { x: 8.45, y: 5.9, w: 4.2, h: 0.35, fontSize: 11, color: C.accent3, align: "center", margin: 0, isTextBox: true });
 
 // 2. Summary
-s = content("프로젝트 요약", null, "개요");
+s = content("Overview", null, "Project Summary", null, "개요");
 const st = [
   ["+12.938 ns", "최종 Setup WNS (SS, Tempus)", C.text2], ["+0.059 ns", "최종 Hold WNS (FF, Tempus)", C.text2],
   ["0 / 0", "DRC / Connectivity", C.accent2], ["PASS", "EC 2회 (223 compare points)", C.accent2],
@@ -176,7 +187,7 @@ const flow = ["RTL", "Function Sim", "Synthesis", "Pre EC · Sim · STA", "Auto 
 const fw = (W - 2 * MX - 7 * 0.15) / 8;
 flow.forEach((f, i) => {
   const x = MX + i * (fw + 0.15);
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y: 4.45, w: fw, h: 0.75, rectRadius: 0.1, fill: { color: i < 4 ? C.text2 : C.accent1 }, line: { type: "none" }, objectName: "flow " + f });
+  s.addShape(pres.shapes.RECTANGLE, { x, y: 4.45, w: fw, h: 0.75, fill: { color: i < 4 ? C.text2 : C.accent1 }, line: { type: "none" }, objectName: "flow " + f });
   s.addText(f, { x, y: 4.45, w: fw, h: 0.75, fontSize: 12, bold: true, color: C.background1, align: "center", valign: "middle", margin: 2, isTextBox: true });
 });
 s.addText("Front-End", { x: MX, y: 5.28, w: 4 * fw + 0.45, h: 0.3, fontSize: 12, color: C.text2, bold: true, align: "center", margin: 0, isTextBox: true });
@@ -189,31 +200,27 @@ bullets(s, [
 // ======================= FRONT-END =======================
 if (MODE !== "BE") {
 pres.addSection({ title: "Front-End" });
-s = pres.addSlide({ masterName: "SECTION_DARK", sectionTitle: "Front-End" });
-s.addText("Front-End", { placeholder: "title" });
-s.addText("RTL → Function Sim → 합성 → Pre-layout Sim / EC / STA", { placeholder: "body" });
-[["1", "Design Logic Diagram + Spec"], ["2", "Function Simulation + Waveform"], ["3", "Synthesis Script · Constraint · Setup Report"], ["4", "Pre-layout Simulation · 타이밍 오차"]].forEach((r, i) => {
-  const y = 3.7 + i * 0.7;
-  s.addShape(pres.shapes.OVAL, { x: MX, y, w: 0.5, h: 0.5, fill: { color: C.accent1 }, line: { type: "none" }, objectName: "num " + r[0] });
-  s.addText(r[0], { x: MX, y, w: 0.5, h: 0.5, fontSize: 12, bold: true, color: C.background1, align: "center", valign: "middle", margin: 0, isTextBox: true });
-  s.addText(r[1], { x: MX + 0.7, y, w: 6, h: 0.5, fontSize: 16, color: C.background1, valign: "middle", margin: 0, isTextBox: true });
-});
-s.addShape(pres.shapes.RECTANGLE, { x: 7.4, y: 1.0, w: 5.35, h: 5.5, fill: { color: C.background1 }, line: { type: "none" }, objectName: "diagram card" });
-s.addImage({ path: U + "a01_block_diagram.png", ...fit("a01_block_diagram.png", 7.5, 1.1, 5.15, 5.3), altText: "Block diagram", objectName: "block diagram small" });
+toc("Front-End", [
+  ["1", "RTL Design", "Block Diagram · Spec · Modules"],
+  ["2", "Function Sim", "Test Plan · Waveform · Bit Width · Framing Error"],
+  ["3", "Synthesis", "Run Script · Constraint · Timing Report (Setup)"],
+  ["4", "Pre-layout Sim", "Setup · Result · Timing Difference · Glitch"],
+  ["5", "Pre-layout Check", "Equivalence Check · STA"],
+], "Front-End", "a01_block_diagram.png");
 
 // FE(a) block diagram
-s = content("Design Logic Diagram", "RTL Design", "Front-End");
+s = content("Front-End", "1", "RTL Design", "Block Diagram", "Front-End");
 img(s, U, "a01_block_diagram.png", MX, 1.2, 8.9, 5.35, { cap: "_UART_TOP 하위 모듈 6개 · 신호 연결 · 사양 · 레지스터 맵" });
 const df = [["송신", "REG_IF → TX_FIFO → UART_TX → o_txd"], ["수신", "i_rxd → UART_RX(2-flop 동기화, mid-bit) → RX_FIFO → REG_IF"], ["틱", "BAUD_GEN → osr_tick 16x → TX / RX"], ["상태 · 인터럽트", "FIFO full/empty, tx_busy, frame/overrun err → STATUS, o_intr"]];
 df.forEach((r, i) => {
   const y = 1.25 + i * 1.38;
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 9.8, y, w: 2.95, h: 1.22, rectRadius: 0.08, fill: { color: C.background2 }, line: { type: "none" }, objectName: "flow card " + i });
+  s.addShape(pres.shapes.RECTANGLE, { x: 9.8, y, w: 2.95, h: 1.22, fill: { color: C.background2 }, line: { type: "none" }, objectName: "flow card " + i });
   s.addText(r[0], { x: 9.95, y: y + 0.08, w: 2.7, h: 0.32, fontSize: 14, bold: true, color: C.accent1, margin: 0, isTextBox: true });
   s.addText(r[1], { x: 9.95, y: y + 0.42, w: 2.7, h: 0.75, fontSize: 11.5, color: C.text1, margin: 0, valign: "top", isTextBox: true });
 });
 
 // FE(a) spec + RTL
-s = content("사양과 RTL 모듈 구성", "RTL Design", "Front-End");
+s = content("Front-End", "1", "RTL Design", "Spec · Modules", "Front-End");
 table(s, [["항목", "사양 (Spec Rev 1.0)"],
   ["Frame", "8-bit, Start 1 + Data 8 (LSB first) + Stop 1, No parity"],
   ["Baud rate", "115,200 bps (DIVISOR 27 → +0.47%)"],
@@ -233,7 +240,7 @@ table(s, [["모듈", "구현 포인트"],
   6.85, 1.35, 5.9, [1.75, 4.15], 12, { rowH: 0.57 });
 
 // FE(b) test plan
-s = content("Function Simulation — 검증 시나리오", "Function Sim", "Front-End");
+s = content("Front-End", "2", "Function Sim", "Test Plan", "Front-End");
 table(s, [["Test", "내용"],
   ["T1", "리셋 값 (STATUS 0x05, INT_EN 0, txd 1, intr 0)"], ["T2", "1바이트(0x5A) 루프백 + TX 라인 모니터"],
   ["T3", "8바이트 연속 = FIFO depth, rx_full"], ["T4", "TX full 쓰기 무시, RX overrun, W1C"],
@@ -246,27 +253,27 @@ img(s, N, "01_funcsim_TEST_PASSED.png", 8.4, 1.3, 4.3, 4.35, { cap: "SimVision C
 note(s, "Self-checking TB · [PASS] 71 / [FAIL] 0 · clk 14 ns (30% 마진), 비트 6,048 ns", 8.4, 6.05, 4.3, 0.7, C.background2);
 
 // FE(b) waveforms
-s = content("Function Simulation — Waveform", "Function Sim", "Front-End");
+s = content("Front-End", "2", "Function Sim", "Waveform", "Front-End");
 img(s, U, "w01_func_full.png", MX, 1.3, 5.95, 3.5, { cap: "전체 0 ~ 3,088 µs: 루프백(T2~T6) · 외부 입력(T7) · T8~T11" });
 img(s, U, "w02_func_frame.png", 6.78, 1.3, 5.95, 3.5, { cap: "T8: 0x3C, 0xC3 연속 송신 → rxd 루프백, FIFO empty 시 intr" });
 table(s, [["확인 항목", "관찰", "판정"],
-  ["프레임", "0x3C = start 0 · 0 0 1 1 1 1 0 0 · stop 1 (LSB first)", "✓"],
-  ["비트 폭", "6,048,000 ps = 16 tick × 27 clk × 14 ns", "✓"],
-  ["인터럽트", "두 번째 바이트가 시프트되는 순간 TX FIFO empty → intr 1", "✓"]],
+  ["프레임", "0x3C = start 0 · 0 0 1 1 1 1 0 0 · stop 1 (LSB first)", "Pass"],
+  ["비트 폭", "6,048,000 ps = 16 tick × 27 clk × 14 ns", "Pass"],
+  ["인터럽트", "두 번째 바이트가 시프트되는 순간 TX FIFO empty → intr 1", "Pass"]],
   MX, 5.35, W - 2 * MX, [1.6, 9.6, 0.93], 12, { rowH: 0.36 });
 
 // FE(b) bit width + framing error
-s = content("Function Simulation — 비트 폭 · Framing error", "Function Sim", "Front-End");
+s = content("Front-End", "2", "Function Sim", "Bit Width · Framing Error", "Front-End");
 img(s, U, "04_waveform_bit_width_cursor.png", MX, 1.3, 5.95, 3.6, { cap: "비트 폭 측정 — TimeA 12,173,000 ps / Baseline 18,221,000 ps" });
 img(s, U, "05_waveform_framing_error.png", 6.78, 1.3, 5.95, 3.6, { cap: "T5 Framing error — stop=0 프레임 (1,120 ~ 1,200 µs)" });
 table(s, [["확인 항목", "관찰", "판정"],
-  ["비트 폭 (T9)", "D1 → D2 시작 간격 6,048,000 ps = 16 tick × 27 clk × 14 ns (사양서 7.1, 9)", "✓"],
-  ["Framing error (T5)", "0xC3 프레임의 stop = 0 → frame_err 1-clk 펄스, rx_fifo_wr 없음 (프레임 폐기)", "✓"],
-  ["인터럽트 (T5)", "frame_err 후 intr = 1 (sticky) → INT_CLR W1C 후 0", "✓"]],
+  ["비트 폭 (T9)", "D1 → D2 시작 간격 6,048,000 ps = 16 tick × 27 clk × 14 ns (사양서 7.1, 9)", "Pass"],
+  ["Framing error (T5)", "0xC3 프레임의 stop = 0 → frame_err 1-clk 펄스, rx_fifo_wr 없음 (프레임 폐기)", "Pass"],
+  ["인터럽트 (T5)", "frame_err 후 intr = 1 (sticky) → INT_CLR W1C 후 0", "Pass"]],
   MX, 5.45, W - 2 * MX, [2.1, 9.1, 0.93], 12, { rowH: 0.36 });
 
 // FE(c) script
-s = content("Synthesis Run Script (Genus)", "Synthesis", "Front-End");
+s = content("Front-End", "3", "Synthesis", "Run Script (Genus)", "Front-End");
 code(s, [
   "set TOP_DESIGN _UART_TOP",
   "set LIB_LIST {fast_vdd1v0_basicCells.lib slow_vdd1v0_basicCells.lib pads_SS_s1vg.lib}",
@@ -295,7 +302,7 @@ code(s, [
 });
 
 // FE(c) constraint
-s = content("Constraint (uart.sdc)", "Synthesis", "Front-End");
+s = content("Front-End", "3", "Synthesis", "Constraint (uart.sdc)", "Front-End");
 code(s, [
   "create_clock -period 16 -name MAIN_CLOCK [get_ports clk]",
   "set_clock_latency -source -max 0.2 [get_clocks MAIN_CLOCK]",
@@ -304,12 +311,15 @@ code(s, [
   "set_clock_transition 0.1 [get_clocks MAIN_CLOCK]",
   "set_input_delay  -max 0.1  -clock MAIN_CLOCK [all_inputs]",
   "set_input_delay  -min 0.01 -clock MAIN_CLOCK [all_inputs]",
-  "remove_input_delay [get_ports clk]",
+  "remove_input_delay [get_ports \"clk\"]",
   "set_output_delay -max 0.1   -clock MAIN_CLOCK [all_outputs]",
   "set_output_delay -min -0.01 -clock MAIN_CLOCK [all_outputs]",
-  "set_driving_cell -lib_cell PADDI -pin Y [inputs except clk]",
+  "set_driving_cell -lib_cell PADDI -pin Y \\",
+  "    [remove_from_collection [all_inputs] [get_ports clk]]",
   "set_load [load_of PADDO/A] [all_outputs]",
-  "set_operating_conditions -max PVT_0P9V_125C -min PVT_1P1V_0C",
+  "set_operating_conditions \\",
+  "    -max_library [get_libs slow_vdd1v0_basicCells.lib:slow_vdd1v0] -max PVT_0P9V_125C \\",
+  "    -min_library [get_libs fast_vdd1v0_basicCells.lib:fast_vdd1v0] -min PVT_1P1V_0C",
   "set_ideal_network [get_ports \"clk clr_n\"]",
   "set_false_path -from [get_ports i_rxd]",
   "set_false_path -from [get_ports clr_n]",
@@ -325,24 +335,14 @@ table(s, [["제약", "근거"],
   7.85, 1.3, 4.9, [1.7, 3.2], 12, { rowH: 0.66 });
 
 // FE(c) timing report
-s = content("Timing Report (Setup) · QoR", "Synthesis", "Front-End");
+s = content("Front-End", "3", "Synthesis", "Timing Report (Setup)", "Front-End");
 img(s, N, "10_syn_qor.png", MX, 1.3, 3.9, 5.4, { cap: "19_qor — WNS +14,996.8 ps" });
 img(s, N, "09_syn_report_constraint.png", 4.85, 1.3, 3.9, 2.9, { cap: "report_constraint — 위반 0" });
 [["+14,996.8 ps", "Setup WNS (16 ns 중 1 ns 사용)"], ["0 / 0", "TNS / Violating paths"], ["563", "셀 (Sequential 213)"], ["2,984.7 µm²", "Total area (cell 2,278.7)"]].forEach((v, i) => stat(s, 9.05 + 0 * i, 1.3 + i * 1.38, 3.7, 1.2, v[0], v[1], i === 0 ? C.accent2 : C.text2));
 note(s, "check_design 구조 문제 0 · check_timing_intent 0 · 로그 에러 0", 4.85, 5.0, 3.9, 0.95);
 
-// FE: EC + STA pre
-s = content("Pre-layout EC · STA", "Pre EC · STA", "Front-End");
-img(s, N, "13_ec_verification_PASS.png", MX, 1.3, 4.6, 4.2, { cap: "Conformal LEC — Compare Results PASS" });
-img(s, N, "15_sta_pre_coverage.png", 5.5, 1.3, 7.2, 2.6, { cap: "Tempus — report_analysis_coverage, Violated 0" });
-table(s, [["검증", "결과"],
-  ["EC (RTL ↔ 합성)", "223 compare points Equivalent, PASS"],
-  ["STA Setup / Hold", "+13.951 ns / +0.039 ns, 위반 0"],
-  ["비동기 입력", "i_rxd · clr_n false path + SoC 연동 조건 명시"]],
-  5.5, 4.45, 7.2, [2.2, 5.0], 12, { rowH: 0.42 });
-
 // FE(d) pre-layout sim
-s = content("Pre-layout Simulation", "Pre-layout Sim", "Front-End");
+s = content("Front-End", "4", "Pre-layout Sim", "Setup · Result", "Front-End");
 table(s, [["항목", "내용"],
   ["입력", "합성 넷리스트 + Genus SDF + 셀 Verilog 모델 (slow)"],
   ["Testbench", "Function과 동일, +define+sdf_gate 만 변경"],
@@ -355,7 +355,7 @@ note(s, "게이트 레벨: RTL 내부 신호를 보는 검사 2개는 define으�
 img(s, N, "14_presim_TEST_PASSED.png", 8.3, 1.3, 4.4, 4.9, { cap: "SimVision Console (Pre-layout) — TEST PASSED" });
 
 // FE(d) timing diff
-s = content("타이밍 오차 — Function vs Pre-layout", "Pre-layout Sim", "Front-End");
+s = content("Front-End", "4", "Pre-layout Sim", "Timing Difference", "Front-End");
 img(s, U, "w03_func_delay.png", MX, 1.3, 5.95, 2.95, { cap: "Function @231 ns — clk와 txd 동시 변화 (0 ps)" });
 img(s, U, "w06_pre_delay.png", 6.78, 1.3, 5.95, 2.95, { cap: "Pre-layout @231 ns — txd 231,080 ps (+80 ps)" });
 table(s, [["비교 지점", "Function", "Pre-layout", "원인"],
@@ -365,33 +365,37 @@ table(s, [["비교 지점", "Function", "Pre-layout", "원인"],
   MX, 4.85, W - 2 * MX, [3.4, 1.7, 2.3, 4.73], 12, { rowH: 0.42 });
 
 // FE(d) glitch
-s = content("타이밍 오차 — 조합 출력 글리치", "Pre-layout Sim", "Front-End");
+s = content("Front-End", "4", "Pre-layout Sim", "Combinational Glitch", "Front-End");
 img(s, U, "w07_pre_rdata.png", MX, 1.3, 7.9, 4.6, { cap: "Pre-layout — rdata가 232,190 ps에 01을 거쳐 45로 안정" });
 bullets(s, [
   [{ text: "현상  ", options: { bold: true, color: C.accent1 } }, { text: "STATUS 읽기에서 rdata 00 → 01 → 45" }],
   [{ text: "원인  ", options: { bold: true, color: C.accent1 } }, { text: "i_addr → o_rdata 읽기 MUX는 조합 경로. bit0이 먼저, bit2·6이 늦게 바뀌어 중간값 발생" }],
   [{ text: "영향  ", options: { bold: true, color: C.accent1 } }, { text: "TB와 CPU는 다음 클럭 에지에 샘플링 → 0.25 ns 안에 안정되므로 기능 영향 없음" }],
-  [{ text: "연결  ", options: { bold: true, color: C.accent1 } }, { text: "같은 경로가 Back-End에서 Hold 위반(−8 ps)으로 나타나 Route 후 수리" }],
+  [{ text: "연결  ", options: { bold: true, color: C.accent1 } }, { text: "같은 경로가 Back-End에서 Hold 위반(-8 ps)으로 나타나 Route 후 수리" }],
 ], 8.85, 1.35, 3.9, 5.2, 14);
+
+// FE: EC + STA pre
+s = content("Front-End", "5", "Pre-layout Check", "EC · STA", "Front-End");
+img(s, N, "13_ec_verification_PASS.png", MX, 1.3, 4.6, 4.2, { cap: "Conformal LEC — Compare Results PASS" });
+img(s, N, "15_sta_pre_coverage.png", 5.5, 1.3, 7.2, 2.6, { cap: "Tempus — report_analysis_coverage, Violated 0" });
+table(s, [["검증", "결과"],
+  ["EC (RTL ↔ 합성)", "223 compare points Equivalent, PASS"],
+  ["STA Setup / Hold", "+13.951 ns / +0.039 ns, 위반 0"],
+  ["비동기 입력", "i_rxd · clr_n false path + SoC 연동 조건 명시"]],
+  5.5, 4.45, 7.2, [2.2, 5.0], 12, { rowH: 0.42 });
 
 }
 // ======================= BACK-END =======================
 if (MODE !== "FE") {
 pres.addSection({ title: "Back-End" });
-s = pres.addSlide({ masterName: "SECTION_DARK", sectionTitle: "Back-End" });
-s.addText("Back-End", { placeholder: "title" });
-s.addText("Floorplan → PowerPlan → Place → CTS → Route → Chip Finish → Sign-off", { placeholder: "body" });
-[["1", "APR 전 과정 Script"], ["2", "Import 파일 정리"], ["3", "단계별 캡처 (고대비 반전)"], ["4", "NanoRoute 후 타이밍"], ["5", "Hold 변화 · 버퍼 삽입"], ["6", "ECO"], ["7", "최종 타이밍 리포트"]].forEach((r, i) => {
-  const y = 3.55 + i * 0.47;
-  s.addShape(pres.shapes.OVAL, { x: MX, y, w: 0.38, h: 0.38, fill: { color: C.accent1 }, line: { type: "none" }, objectName: "num " + r[0] });
-  s.addText(r[0], { x: MX, y, w: 0.38, h: 0.38, fontSize: 10, bold: true, color: C.background1, align: "center", valign: "middle", margin: 0, isTextBox: true });
-  s.addText(r[1], { x: MX + 0.55, y, w: 6, h: 0.38, fontSize: 14, color: C.background1, valign: "middle", margin: 0, isTextBox: true });
-});
-s.addShape(pres.shapes.RECTANGLE, { x: 7.4, y: 1.0, w: 5.35, h: 5.5, fill: { color: C.background1 }, line: { type: "none" }, objectName: "route card" });
-s.addImage({ path: U + "b06_cts_clock.png", ...fit("b06_cts_clock.png", 7.5, 1.1, 5.15, 5.3), altText: "CTS clock nets", objectName: "cts small" });
+toc("Back-End", [
+  ["1", "APR", "Script Flow · Import Files · Floorplan · PowerPlan · Placement · CTS · Route · Chip Finish"],
+  ["2", "Timing", "Post-route (NanoRoute) · Hold Fix · Buffer Insertion"],
+  ["3", "Sign-off", "STA · ECO · Post-layout EC · Post-layout Sim"],
+], "Back-End", "b08_chipfinish.png");
 
 // BE(a) scripts
-s = content("APR 전 과정 Script (Innovus · Tempus)", "APR Script", "Back-End");
+s = content("Back-End", "1", "APR", "Script Flow", "Back-End");
 const scr = [
   ["0_InitDesign", "init_design (MMMC)\nfloorPlan -r 1 0.7 10…\neditPin L/R M3, T/B M4\nsaveDesign InitDesign"],
   ["1_PowerPlan", "globalNetConnect VDD/VSS\naddRing M3/M4 w2\nsroute corePin (M1)\naddStripe M4 ×3 pair"],
@@ -404,16 +408,16 @@ const scr = [
 ];
 scr.forEach((c, i) => {
   const cw = (W - 2 * MX - 3 * 0.25) / 4, x = MX + (i % 4) * (cw + 0.25), y = 1.3 + Math.floor(i / 4) * 2.75;
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w: cw, h: 2.5, rectRadius: 0.08, fill: { color: i < 6 ? C.background2 : C.background1 }, line: { color: i < 6 ? HEX.lt2 : HEX.accent5, width: 0.75 }, objectName: "script " + c[0] });
+  s.addShape(pres.shapes.RECTANGLE, { x, y, w: cw, h: 2.5, fill: { color: i < 6 ? C.background2 : C.background1 }, line: { color: i < 6 ? HEX.lt2 : HEX.accent5, width: 0.75 }, objectName: "script " + c[0] });
   s.addText(c[0], { x: x + 0.15, y: y + 0.12, w: cw - 0.3, h: 0.4, fontSize: 15, bold: true, color: i < 6 ? C.accent1 : C.accent2, margin: 0, isTextBox: true });
   s.addText(c[1], { x: x + 0.15, y: y + 0.6, w: cw - 0.3, h: 1.8, fontFace: MONO, fontSize: 11, color: C.text1, valign: "top", margin: 0, isTextBox: true });
 });
 
 // BE(b) import files
-s = content("Import 파일 정리", "PnR Setup", "Back-End");
+s = content("Back-End", "1", "APR", "Import Files", "Back-End");
 table(s, [["구분", "파일", "출처 · 설정"],
   ["Gate netlist", "_UART_TOP_syn_final.v", "Genus 출력 (계층 유지) · init_verilog"],
-  ["Constraint", "_UART_TOP_pnr.sdc", "합성 SDC − set_ideal_network · constraint mode FUNC"],
+  ["Constraint", "_UART_TOP_pnr.sdc", "합성 SDC - set_ideal_network · constraint mode FUNC"],
   ["MMMC", "_UART_TOP.mmmc.view", "corner 2 · view 2 · init_mmmc_file"],
   ["Tech / Cell LEF", "gsclib045_tech / macro / multibitsDFF", "GPDK045 · init_lef_file"],
   ["Timing lib (max)", "slow_vdd1v0_*, pads_SS", "SS_Max_0p90v_125c"],
@@ -430,20 +434,20 @@ note(s, "블록 단위 PnR: IO pad 없이 핀만 배치\n배선층 Metal1~4 · �
 note(s, "라이브러리는 파일 이름과 PVT만 기재 (PDK 내용 · 경로 비공개)", 8.85, 4.95, 3.9, 0.9, C.background2);
 
 // BE(c) floorplan + power
-s = content("Floorplan · PowerPlan", "Floorplan", "Back-End");
-img(s, U, "b01_floorplan.png", MX, 1.3, 4.2, 4.6, { cap: "① Floorplan — row · 핀 27개" });
-img(s, U, "b02_powerplan.png", 5.0, 1.3, 4.2, 4.6, { cap: "② PowerPlan — Ring · Rail · Stripe" });
+s = content("Back-End", "1", "APR", "Floorplan · PowerPlan", "Back-End");
+img(s, U, "b01_floorplan.png", MX, 1.3, 4.2, 4.6, { cap: "(1) Floorplan — row · 핀 27개" });
+img(s, U, "b02_powerplan.png", 5.0, 1.3, 4.2, 4.6, { cap: "(2) PowerPlan — Ring · Rail · Stripe" });
 bullets(s, [
-  "floorPlan -r 1 0.7 10: 종횡비 1, 이용률 70%, 링 자리 10 µm",
-  "핀: 좌 14 / 우 9 (M3), 위 clk·clr_n / 아래 i_rxd·o_txd (M4)",
-  "Core ring M3/M4 2 µm → 8 wires",
-  "M1 rail 102 · M4 stripe 3쌍 (20 µm)",
-  "verify_drc 0 · verifyConnectivity 0",
-], 9.6, 1.35, 3.15, 5.2, 13);
+  "종횡비 1 · 이용률 70% · 여백 10 µm",
+  "핀 27개: 좌 14 / 우 9 (M3), 상·하 4 (M4)",
+  "Core ring M3/M4, 폭 2 µm",
+  "M1 rail 102 · M4 stripe 3쌍 (간격 20 µm)",
+  "verify_drc 0 / verifyConnectivity 0",
+], 9.5, 1.35, 3.3, 5.2, 12);
 
 // BE(c) place
-s = content("Placement", "Placement", "Back-End");
-img(s, U, "b03_place.png", MX, 1.3, 4.2, 4.6, { cap: "③ PlaceOpt — 셀 배치 · 예비 배선" });
+s = content("Back-End", "1", "APR", "Placement", "Back-End");
+img(s, U, "b03_place.png", MX, 1.3, 4.2, 4.6, { cap: "(3) PlaceOpt — 셀 배치 · 예비 배선" });
 img(s, U, "b04_density.png", 5.0, 1.3, 4.2, 4.6, { cap: "Density Map — 최대 bin 0.827" });
 stat(s, 9.6, 1.3, 3.15, 1.15, "0.00%", "Overflow H / V");
 stat(s, 9.6, 2.6, 3.15, 1.15, "+13.390 ns", "place_opt Setup WNS", C.accent2);
@@ -451,17 +455,17 @@ stat(s, 9.6, 3.9, 3.15, 1.15, "72.2%", "Density (562 placed)");
 note(s, "RN 상수 핀 3개 → addTieHiLo로 TIEHI 2개 연결", 9.6, 5.2, 3.15, 0.95);
 
 // BE(c) CTS
-s = content("Clock Tree Synthesis", "CTS", "Back-End");
-img(s, U, "b06_cts_clock.png", MX, 1.3, 4.2, 4.6, { cap: "④ CTS — 클록 net 강조" });
+s = content("Back-End", "1", "APR", "CTS", "Back-End");
+img(s, U, "b06_cts_clock.png", MX, 1.3, 4.2, 4.6, { cap: "(4) CTS — 클록 net 강조" });
 img(s, U, "b11_clock_trees.png", 5.0, 1.3, 4.2, 4.6, { cap: "clock_trees.rpt — 버퍼 23 · 인버터 1 · depth 2" });
 table(s, [["항목", "결과"], ["클록 셀", "24개, 47.5 µm²"], ["Depth", "2 / 2"], ["Sink", "213"], ["Skew SS / FF", "0.056 / 0.018 ns"], ["최악 실제 Skew", "0.047 ns"], ["Leaf slew", "0.102 ns"]],
   9.6, 1.3, 3.15, [1.65, 1.5], 12, { rowH: 0.48 });
 note(s, "negedge 3개 = DFFNSR + 클록 인버터 (실제 clk ↑ 동작)", 9.6, 4.9, 3.15, 1.0);
 
 // BE(c) route + finish
-s = content("Route · Chip Finish", "Route", "Back-End");
-img(s, U, "b07_route.png", MX, 1.3, 4.2, 4.6, { cap: "⑤ RouteDesign — M1~M4 배선" });
-img(s, U, "b08_chipfinish.png", 5.0, 1.3, 4.2, 4.6, { cap: "⑥ ChipFinish — Filler 573" });
+s = content("Back-End", "1", "APR", "Route · Chip Finish", "Back-End");
+img(s, U, "b07_route.png", MX, 1.3, 4.2, 4.6, { cap: "(5) RouteDesign — M1~M4 배선" });
+img(s, U, "b08_chipfinish.png", 5.0, 1.3, 4.2, 4.6, { cap: "(6) ChipFinish — Filler 573" });
 bullets(s, [
   "routeDesign -globalDetail: 0 error",
   "DRC 0 · Connectivity 0 (Route 후, Finish 후)",
@@ -471,20 +475,36 @@ bullets(s, [
 ], 9.6, 1.35, 3.15, 5.2, 13);
 
 // BE(d)
-s = content("NanoRoute 후 타이밍 (Innovus)", "Post-route", "Back-End");
+s = content("Back-End", "2", "Timing", "Post-route (NanoRoute)", "Back-End");
 table(s, [["구분", "all", "reg2reg", "default (I/O)", "Violating"],
   ["Setup WNS (FUNC_SS_WORST)", "+12.938 ns", "+13.021", "+12.938", "0"],
   ["Hold WNS (FUNC_FF_BEST)", "+0.022 ns", "+0.059", "+0.022", "0"],
   ["DRV (cap / tran / fanout / length)", "0 / 0 / 0 / 0", "", "", ""],
   ["Density", "82.99%", "", "", ""]],
   MX, 1.3, W - 2 * MX, [4.0, 2.2, 1.9, 2.2, 1.83], 13, { rowH: 0.5 });
-stat(s, MX, 4.2, 3.85, 1.3, "+12.938 ns", "Setup WNS (16 ns 클럭)", C.accent2);
-stat(s, MX + 4.08, 4.2, 3.85, 1.3, "+0.022 ns", "Hold WNS (2차 수리 후)", C.accent2);
-stat(s, MX + 8.16, 4.2, 3.95, 1.3, "0", "DRC / Connectivity 위반");
-note(s, "RC 추출(extractRC) 후 setup → hold 순서로 최적화 · SI off, single analysis mode", MX, 5.8, W - 2 * MX, 0.7);
+code(s, [
+  "innovus> timeDesign -postRoute",
+  "Setup views included: FUNC_SS_WORST",
+  "|     Setup mode     |   all   | reg2reg | default |",
+  "|           WNS (ns):| 12.938  | 13.021  | 12.938  |",
+  "|           TNS (ns):|  0.000  |  0.000  |  0.000  |",
+  "|    Violating Paths:|    0    |    0    |    0    |",
+  "|          All Paths:|   350   |   276   |   160   |",
+  "Density: 82.993%",
+].join("\n"), MX, 4.15, 5.95, 2.6, 10.5);
+code(s, [
+  "innovus> timeDesign -postRoute -hold",
+  "Hold views included: FUNC_FF_BEST",
+  "|     Hold mode      |   all   | reg2reg | default |",
+  "|           WNS (ns):|  0.022  |  0.059  |  0.022  |",
+  "|           TNS (ns):|  0.000  |  0.000  |  0.000  |",
+  "|    Violating Paths:|    0    |    0    |    0    |",
+  "|          All Paths:|   350   |   276   |   160   |",
+  "Design Stage: PostRoute · Parasitics: SPEF/RCDB",
+].join("\n"), MX + 6.15, 4.15, 5.98, 2.6, 10.5);
 
 // BE(e)
-s = content("Hold Timing 변화와 버퍼 삽입", "Hold Fix", "Back-End");
+s = content("Back-End", "2", "Timing", "Hold Fix · Buffer Insertion", "Back-End");
 s.addChart(pres.charts.BAR, [{ name: "삽입 버퍼", labels: ["Place 후", "CTS 후", "Route 후"], values: [0, 106, 63] }], {
   x: MX, y: 1.3, w: 4.6, h: 3.6, barDir: "col", chartColors: [HEX.accent1], showValue: true, dataLabelPosition: "outEnd",
   dataLabelColor: HEX.dk1, dataLabelFontSize: 12, dataLabelFontFace: "+mn-lt", showTitle: true, title: "단계별 Hold 버퍼 (누적 169)",
@@ -493,8 +513,8 @@ s.addChart(pres.charts.BAR, [{ name: "삽입 버퍼", labels: ["Place 후", "CTS
   catAxisLabelFontSize: 12, valAxisLabelFontSize: 11, valGridLine: { color: HEX.lt2, size: 0.5 }, catGridLine: { style: "none" }, valAxisMaxVal: 120,
 });
 table(s, [["단계", "Hold WNS", "위반 경로", "버퍼"],
-  ["CTS 후", "−0.001 → +0.020 ns", "i_wdata → TX FIFO (8)", "106"],
-  ["Route 후", "−0.008 → +0.022 ns", "i_addr → o_rdata (3)", "63"],
+  ["CTS 후", "-0.001 → +0.020 ns", "i_wdata → TX FIFO (8)", "106"],
+  ["Route 후", "-0.008 → +0.022 ns", "i_addr → o_rdata (3)", "63"],
   ["Sign-off", "+0.059 ns (Tempus)", "0", "169"]],
   5.5, 1.3, 7.25, [1.2, 2.2, 2.85, 1.0], 12, { rowH: 0.48 });
 bullets(s, [
@@ -506,14 +526,14 @@ bullets(s, [
 note(s, "기타 삽입 셀: Setup/DRV 버퍼 FE_OFC 40 · 클록 셀 24 · TIEHI 2", MX, 5.95, W - 2 * MX, 0.6, C.background2);
 
 // BE(f)(g)
-s = content("최종 타이밍 리포트 (Tempus Sign-off) · ECO", "Sign-off STA", "Back-End");
+s = content("Back-End", "3", "Sign-off", "STA · ECO", "Back-End");
 img(s, U, "b16_sta_coverage.png", MX, 1.3, 6.6, 2.15, { cap: "report_analysis_coverage — 전 항목 Violated 0" });
 img(s, U, "b17_sta_setup.png", MX, 3.95, 6.6, 1.25, { cap: "Setup 최악 +12.938 ns (U3_RX_FIFO/o_data_reg_0)" });
 img(s, U, "b19_sta_hold.png", MX, 5.65, 6.6, 0.9, { cap: "Hold 최악 +0.059 ns (U4_UART_RX/rxd_s_reg)" });
 table(s, [["Check", "Violated", "Untested"],
   ["Setup / Hold", "0 / 0", "1 / 1 (i_rxd)"], ["External delay", "0", "0"], ["Recovery / Removal", "0", "88 (clr_n)"], ["Pulse width", "0", "88"], ["RC 반영", "실제 net 823개 100%", ""]],
   7.6, 1.3, 5.15, [1.9, 1.8, 1.45], 12, { rowH: 0.44 });
-s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 7.6, y: 4.2, w: 5.15, h: 2.3, rectRadius: 0.08, fill: { color: C.text2 }, line: { type: "none" }, objectName: "eco card" });
+s.addShape(pres.shapes.RECTANGLE, { x: 7.6, y: 4.2, w: 5.15, h: 2.3, fill: { color: C.text2 }, line: { type: "none" }, objectName: "eco card" });
 s.addText([
   { text: "ECO — 미수행", options: { bold: true, color: C.accent1, fontSize: 16, breakLine: true } },
   { text: "Sign-off STA 위반 0. Hold는 PnR 단계(CTS 후 · Route 후) optDesign -hold로 이미 해결. Untested 개수가 Pre-layout STA와 같아 PnR이 새 미검사 경로를 만들지 않음.", options: { color: C.background1, fontSize: 13 } },
@@ -521,7 +541,7 @@ s.addText([
 
 // ======================= SIGN-OFF =======================
 pres.addSection({ title: "Sign-off" });
-s = content("Post-layout EC · Simulation", "Post-layout", "Sign-off");
+s = content("Back-End", "3", "Sign-off", "Post-layout EC · Sim", "Sign-off");
 table(s, [["검증", "결과"],
   ["Post EC (합성 ↔ PnR)", "PI 17 · PO 10 · DFF 213, 223 Equivalent, Unmapped 0 → PASS"],
   ["Post Sim max (SS)", "계층 넷리스트 + wst SDF → TEST PASSED, FAIL 0"],
@@ -545,15 +565,48 @@ const PR = [
   ["FE", "Pre-layout Sim", "Genus SDF max 칸만 기록 → 지연 0", "$sdf_annotate \"MAXIMUM\""],
   ["FE", "Pre-layout STA", "비동기 입력 Removal / Hold 위반", "i_rxd · clr_n false path + SoC 연동 조건"],
   ["BE", "Placement", "RN 상수 핀이 Tie 셀 없이 연결", "addTieHiLo → TIEHI 2"],
-  ["BE", "CTS 후", "입력 → FIFO Hold −1 ps (8 경로)", "holdTargetSlack 0.02 → +0.020 ns"],
-  ["BE", "Route 후", "i_addr → o_rdata Hold −8 ps", "postRoute hold 2회 → +0.022 ns"],
+  ["BE", "CTS 후", "입력 → FIFO Hold -1 ps (8 경로)", "holdTargetSlack 0.02 → +0.020 ns"],
+  ["BE", "Route 후", "i_addr → o_rdata Hold -8 ps", "postRoute hold 2회 → +0.022 ns"],
   ["BE", "Post EC", ".tcl dofile이 Tcl 모드로 실행", ".do + // 주석"],
   ["BE", "Post Sim", "flat 넷리스트 ↔ 계층 SDF (적용 4%)", "계층 넷리스트 별도 출력 → PASS"],
 ].filter((r) => MODE === "ALL" || r[0] === MODE).map((r) => r.slice(1));
 pres.addSection({ title: "문제 해결" });
-s = content("주요 문제 해결 기록", null, "문제 해결");
+s = content("Summary", null, "Problems Solved", null, "문제 해결");
 table(s, [["단계", "문제", "해결"]].concat(PR),
   MX, 1.3, W - 2 * MX, [2.2, 5.0, 4.93], 13, { rowH: 0.62 });
+}
+
+// ======================= APPENDIX =======================
+{
+const fs = require("fs");
+const REPO = "/home/user/Project/proj1_make/TOP/";
+const strip = (f) => fs.readFileSync(REPO + f, "utf8").split("\n")
+  .filter((l) => !/^\s*#/.test(l) && l.trim() !== "" && !/get_verify_drc_mode/.test(l))
+  .map((l) => l.replace(/\s*;?\s*#.*$/, "").replace(/\t/g, "  ")).join("\n");
+const pages = [];
+if (MODE !== "BE") {
+  const syn = strip("SYN/script/uart_45nm.tcl").split("\n").filter((l) => !/^(puts|echo|sh |if \{\[file|\s+sh grep|\})/.test(l));
+  pages.push(["A", "Synthesis Script", "uart_45nm.tcl", syn.join("\n")]);
+}
+if (MODE !== "FE") {
+  [["0_InitDesign.tcl"], ["1_PowerPlan.tcl"], ["2_PlaceOpt.tcl"], ["3_PostCTSopt.tcl"], ["4_RouteDesign_PowerAnalysis.tcl"], ["5_ChipFinish.tcl", "tempus.tcl"]]
+    .forEach((g) => pages.push(["B", "APR Script", g.join(" · "), g.map((f) => "## " + f + "\n" + strip("PNR/" + f)).join("\n\n")]));
+}
+if (pages.length) pres.addSection({ title: "Appendix" });
+const MAXL = 36, CPL = 150;
+pages.forEach((pg) => {
+  const chunks = []; let cur = [], n = 0;
+  pg[3].split("\n").forEach((l) => {
+    const v = Math.max(1, Math.ceil(l.length / CPL));
+    if (n + v > MAXL && cur.length) { chunks.push(cur); cur = []; n = 0; }
+    cur.push(l); n += v;
+  });
+  if (cur.length) chunks.push(cur);
+  chunks.forEach((c, k) => {
+    s = content("Appendix", pg[0], pg[1], pg[2].replace(/ \(\d\/\d\)$/, "") + (chunks.length > 1 ? " (" + (k + 1) + "/" + chunks.length + ")" : ""), "Appendix");
+    code(s, c.join("\n"), MX, 1.2, W - 2 * MX, 5.65, 8.5);
+  });
+});
 }
 
 // Closing
@@ -565,7 +618,7 @@ s.addText(MODE === "FE" ? "사양서에서 게이트 넷리스트까지, 기능�
  : MODE === "BE" ? [["Timing", "Setup +12.938 ns / Hold +0.059 ns (Tempus)"], ["Physical", "DRC 0 · Connectivity 0 · Filler · GDS 출력"], ["Equivalence", "합성 ↔ PnR PASS (223 points)"], ["Dynamic", "Post-layout max / min TEST PASSED"]]
  : [["Timing", "Setup +12.938 ns / Hold +0.059 ns (Tempus)"], ["Physical", "DRC 0 · Connectivity 0 · Filler · GDS 출력"], ["Equivalence", "RTL ↔ 합성 ↔ PnR 모두 PASS"], ["Dynamic", "Function · Pre · Post max/min TEST PASSED"]]).forEach((r, i) => {
   const y = 1.3 + i * 1.25;
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 8.0, y, w: 4.75, h: 1.05, rectRadius: 0.08, fill: { color: C.background1 }, line: { type: "none" }, objectName: "result " + r[0] });
+  s.addShape(pres.shapes.RECTANGLE, { x: 8.0, y, w: 4.75, h: 1.05, fill: { color: C.background1 }, line: { type: "none" }, objectName: "result " + r[0] });
   s.addText(r[0], { x: 8.2, y: y + 0.08, w: 4.4, h: 0.38, fontSize: 15, bold: true, color: C.accent1, margin: 0, isTextBox: true });
   s.addText(r[1], { x: 8.2, y: y + 0.48, w: 4.4, h: 0.45, fontSize: 13, color: C.text1, margin: 0, isTextBox: true });
 });
