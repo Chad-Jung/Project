@@ -4,6 +4,7 @@ const { applyTheme } = require("/root/.claude/skills/synced/d6c7b799-1459-4326-b
 const SP = "/tmp/claude-0/-home-user-Project/3e30fc78-a722-55d3-8ab7-6834530a58d6/scratchpad";
 const U = SP + "/upload/", N = SP + "/notion/";
 const OUT = process.argv[2] || "UART_IP_Portfolio_KO.pptx";
+const MODE = process.env.DECK || "ALL";   // ALL | FE | BE
 
 const DIM = {
   "a01_block_diagram.png": [3440, 2220], "a02_import_files.png": [3120, 2148],
@@ -138,16 +139,20 @@ function pill(slide, x, y, w, text, color) {
 // 1. Title
 pres.addSection({ title: "개요" });
 let s = pres.addSlide({ masterName: "TITLE_DARK", sectionTitle: "개요" });
-s.addText("UART IP 설계 포트폴리오", { placeholder: "title" });
+s.addText(MODE === "FE" ? "UART IP Front-End 포트폴리오" : MODE === "BE" ? "UART IP Back-End 포트폴리오" : "UART IP 설계 포트폴리오", { placeholder: "title" });
+const SUB = MODE === "FE" ? ["RTL → Gate Netlist · Cadence 45 nm Front-End Flow", "Xcelium · Genus · Conformal LEC · Tempus", "Function Sim · Synthesis · EC · Pre-layout Sim / STA"]
+  : MODE === "BE" ? ["Gate Netlist → GDS Sign-off · Cadence 45 nm Back-End Flow", "Innovus · Tempus · Conformal LEC · Xcelium", "Floorplan · CTS · Route · STA · Post-layout EC / Sim"]
+  : ["RTL → GDS Sign-off · Cadence 45 nm Digital Flow", "Front-End (Xcelium · Genus · Conformal · Tempus)", "Back-End (Innovus · Tempus)"];
 s.addText([
-  { text: "RTL → GDS Sign-off · Cadence 45 nm Digital Flow", options: { breakLine: true } },
-  { text: "Front-End (Xcelium · Genus · Conformal · Tempus)", options: { breakLine: true, fontSize: 14 } },
-  { text: "Back-End (Innovus · Tempus)", options: { fontSize: 14 } },
+  { text: SUB[0], options: { breakLine: true } },
+  { text: SUB[1], options: { breakLine: true, fontSize: 14 } },
+  { text: SUB[2], options: { fontSize: 14 } },
 ], { placeholder: "body" });
 s.addText("YECHAN JUNG  ·  Cadence Academy Certificate Project", { x: MX, y: 6.3, w: 7, h: 0.4, fontSize: 13, color: C.accent1, margin: 0, isTextBox: true });
-s.addShape(pres.shapes.RECTANGLE, { x: 8.35, y: 1.15, w: 4.4, h: 5.2, fill: { color: C.background1 }, line: { type: "none" }, objectName: "layout card" });
-s.addImage({ path: U + "b08_chipfinish.png", ...fit("b08_chipfinish.png", 8.45, 1.25, 4.2, 4.6), altText: "Final layout", objectName: "final layout" });
-s.addText("최종 레이아웃 (Chip Finish)", { x: 8.45, y: 5.9, w: 4.2, h: 0.35, fontSize: 11, color: C.accent3, align: "center", margin: 0, isTextBox: true });
+const COVER = MODE === "FE" ? "a01_block_diagram.png" : "b08_chipfinish.png";
+s.addShape(pres.shapes.RECTANGLE, { x: 8.35, y: 1.15, w: 4.4, h: 5.2, fill: { color: C.background1 }, line: { type: "none" }, objectName: "cover card" });
+s.addImage({ path: U + COVER, ...fit(COVER, 8.45, 1.25, 4.2, 4.6), altText: "Cover image", objectName: "cover image" });
+s.addText(MODE === "FE" ? "블록 다이어그램" : "최종 레이아웃 (Chip Finish)", { x: 8.45, y: 5.9, w: 4.2, h: 0.35, fontSize: 11, color: C.accent3, align: "center", margin: 0, isTextBox: true });
 
 // 2. Summary
 s = content("프로젝트 요약", null, "개요");
@@ -156,7 +161,17 @@ const st = [
   ["0 / 0", "DRC / Connectivity", C.accent2], ["PASS", "EC 2회 (223 compare points)", C.accent2],
   ["4 / 4", "TEST PASSED (Func · Pre · Post max · min)", C.accent2], ["52 µW", "Static Power (SS, 16 ns)", C.accent1],
 ];
-st.forEach((v, i) => stat(s, MX + (i % 3) * 4.08, 1.3 + Math.floor(i / 3) * 1.45, 3.85, 1.25, v[0], v[1], v[2]));
+const STF = [
+  ["+14,996.8 ps", "합성 Setup WNS (16 ns 클럭)", C.text2], ["563 · 2,984.7 µm²", "합성 셀 수 · 면적", C.text2],
+  ["0", "합성 스펙 위반 (constraint)", C.accent2], ["PASS", "EC RTL ↔ 합성 (223 points)", C.accent2],
+  ["71 / 71", "Function Sim TEST PASSED", C.accent2], ["69 / 69", "Pre-layout Sim TEST PASSED", C.accent1],
+];
+const STB = [
+  ["+12.938 ns", "최종 Setup WNS (SS, Tempus)", C.text2], ["+0.059 ns", "최종 Hold WNS (FF, Tempus)", C.text2],
+  ["0 / 0", "DRC / Connectivity", C.accent2], ["169", "Hold 수리 버퍼 (CTS 106 + Route 63)", C.accent1],
+  ["PASS", "Post-layout EC (223 points)", C.accent2], ["52 µW", "Static Power (SS, 16 ns)", C.accent1],
+];
+(MODE === "FE" ? STF : MODE === "BE" ? STB : st).forEach((v, i) => stat(s, MX + (i % 3) * 4.08, 1.3 + Math.floor(i / 3) * 1.45, 3.85, 1.25, v[0], v[1], v[2]));
 const flow = ["RTL", "Function Sim", "Synthesis", "Pre EC · Sim · STA", "Auto PnR", "Post EC", "Post STA", "Post Sim"];
 const fw = (W - 2 * MX - 7 * 0.15) / 8;
 flow.forEach((f, i) => {
@@ -172,6 +187,7 @@ bullets(s, [
 ], MX, 5.75, W - 2 * MX, 0.9, 14);
 
 // ======================= FRONT-END =======================
+if (MODE !== "BE") {
 pres.addSection({ title: "Front-End" });
 s = pres.addSlide({ masterName: "SECTION_DARK", sectionTitle: "Front-End" });
 s.addText("Front-End", { placeholder: "title" });
@@ -358,7 +374,9 @@ bullets(s, [
   [{ text: "연결  ", options: { bold: true, color: C.accent1 } }, { text: "같은 경로가 Back-End에서 Hold 위반(−8 ps)으로 나타나 Route 후 수리" }],
 ], 8.85, 1.35, 3.9, 5.2, 14);
 
+}
 // ======================= BACK-END =======================
+if (MODE !== "FE") {
 pres.addSection({ title: "Back-End" });
 s = pres.addSlide({ masterName: "SECTION_DARK", sectionTitle: "Back-End" });
 s.addText("Back-End", { placeholder: "title" });
@@ -520,29 +538,38 @@ s.addChart(pres.charts.BAR, [{ name: "clk→txd", labels: ["Function", "Pre-layo
 img(s, U, "w10_post_max_delay.png", MX, 4.25, 4.9, 2.4, { cap: "Post max: clk ↑ → txd ↓ 440 ps" });
 note(s, "Pre(80 ps)와 Post max(440 ps)의 차이 360 ps = CTS 리포트의 o_txd_reg 클록 Latency 0.356 ns → 클록 트리 지연이 시뮬레이션에서도 확인됨", 5.75, 4.85, 7.0, 1.4);
 
-s = content("주요 문제 해결 기록", null, "Sign-off");
-table(s, [["단계", "문제", "해결"],
-  ["Pre-layout Sim", "Genus SDF max 칸만 기록 → 지연 0", "$sdf_annotate \"MAXIMUM\""],
-  ["Pre-layout STA", "비동기 입력 Removal / Hold 위반", "i_rxd · clr_n false path + SoC 연동 조건"],
-  ["Placement", "RN 상수 핀이 Tie 셀 없이 연결", "addTieHiLo → TIEHI 2"],
-  ["CTS 후", "입력 → FIFO Hold −1 ps (8 경로)", "holdTargetSlack 0.02 → +0.020 ns"],
-  ["Route 후", "i_addr → o_rdata Hold −8 ps", "postRoute hold 2회 → +0.022 ns"],
-  ["Post EC", ".tcl dofile이 Tcl 모드로 실행", ".do + // 주석"],
-  ["Post Sim", "flat 넷리스트 ↔ 계층 SDF (적용 4%)", "계층 넷리스트 별도 출력 → PASS"]],
+}
+// ======================= PROBLEMS =======================
+{
+const PR = [
+  ["FE", "Pre-layout Sim", "Genus SDF max 칸만 기록 → 지연 0", "$sdf_annotate \"MAXIMUM\""],
+  ["FE", "Pre-layout STA", "비동기 입력 Removal / Hold 위반", "i_rxd · clr_n false path + SoC 연동 조건"],
+  ["BE", "Placement", "RN 상수 핀이 Tie 셀 없이 연결", "addTieHiLo → TIEHI 2"],
+  ["BE", "CTS 후", "입력 → FIFO Hold −1 ps (8 경로)", "holdTargetSlack 0.02 → +0.020 ns"],
+  ["BE", "Route 후", "i_addr → o_rdata Hold −8 ps", "postRoute hold 2회 → +0.022 ns"],
+  ["BE", "Post EC", ".tcl dofile이 Tcl 모드로 실행", ".do + // 주석"],
+  ["BE", "Post Sim", "flat 넷리스트 ↔ 계층 SDF (적용 4%)", "계층 넷리스트 별도 출력 → PASS"],
+].filter((r) => MODE === "ALL" || r[0] === MODE).map((r) => r.slice(1));
+pres.addSection({ title: "문제 해결" });
+s = content("주요 문제 해결 기록", null, "문제 해결");
+table(s, [["단계", "문제", "해결"]].concat(PR),
   MX, 1.3, W - 2 * MX, [2.2, 5.0, 4.93], 13, { rowH: 0.62 });
+}
 
 // Closing
 pres.addSection({ title: "마무리" });
 s = pres.addSlide({ masterName: "TITLE_DARK", sectionTitle: "마무리" });
 s.addText("정리", { placeholder: "title" });
-s.addText("사양서 한 장에서 Sign-off까지, 모든 단계를 위반 0으로 마감", { placeholder: "body" });
-[["Timing", "Setup +12.938 ns / Hold +0.059 ns (Tempus)"], ["Physical", "DRC 0 · Connectivity 0 · Filler · GDS 출력"], ["Equivalence", "RTL ↔ 합성 ↔ PnR 모두 PASS"], ["Dynamic", "Function · Pre · Post max/min TEST PASSED"]].forEach((r, i) => {
+s.addText(MODE === "FE" ? "사양서에서 게이트 넷리스트까지, 기능과 타이밍을 모두 검증" : MODE === "BE" ? "합성 넷리스트에서 GDS까지, 물리·타이밍 Sign-off를 위반 0으로 마감" : "사양서 한 장에서 Sign-off까지, 모든 단계를 위반 0으로 마감", { placeholder: "body" });
+(MODE === "FE" ? [["Function", "11개 시나리오 71/71 PASS"], ["Synthesis", "WNS +14,996.8 ps · 2,984.7 µm² · 위반 0"], ["Equivalence", "RTL ↔ 합성 PASS (223 points)"], ["Pre-layout", "Sim 69/69 PASS · STA 위반 0"]]
+ : MODE === "BE" ? [["Timing", "Setup +12.938 ns / Hold +0.059 ns (Tempus)"], ["Physical", "DRC 0 · Connectivity 0 · Filler · GDS 출력"], ["Equivalence", "합성 ↔ PnR PASS (223 points)"], ["Dynamic", "Post-layout max / min TEST PASSED"]]
+ : [["Timing", "Setup +12.938 ns / Hold +0.059 ns (Tempus)"], ["Physical", "DRC 0 · Connectivity 0 · Filler · GDS 출력"], ["Equivalence", "RTL ↔ 합성 ↔ PnR 모두 PASS"], ["Dynamic", "Function · Pre · Post max/min TEST PASSED"]]).forEach((r, i) => {
   const y = 1.3 + i * 1.25;
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 8.0, y, w: 4.75, h: 1.05, rectRadius: 0.08, fill: { color: C.background1 }, line: { type: "none" }, objectName: "result " + r[0] });
   s.addText(r[0], { x: 8.2, y: y + 0.08, w: 4.4, h: 0.38, fontSize: 15, bold: true, color: C.accent1, margin: 0, isTextBox: true });
   s.addText(r[1], { x: 8.2, y: y + 0.48, w: 4.4, h: 0.45, fontSize: 13, color: C.text1, margin: 0, isTextBox: true });
 });
-s.addText("개선 과제: 지연 셀 허용 시 Hold 버퍼 감축 · I/O 예산을 SoC 실제 값으로 재설정 · Voltus IR-drop 분석", { x: MX, y: 6.3, w: 12.1, h: 0.5, fontSize: 13, color: C.accent5, margin: 0, isTextBox: true });
+s.addText(MODE === "FE" ? "개선 과제: I/O 예산을 SoC 실제 값으로 재설정 · 조합 출력(o_rdata) 레지스터화 검토 · 커버리지 기반 검증 확장" : "개선 과제: 지연 셀 허용 시 Hold 버퍼 감축 · I/O 예산을 SoC 실제 값으로 재설정 · Voltus IR-drop 분석", { x: MX, y: 6.3, w: 12.1, h: 0.5, fontSize: 13, color: C.accent5, margin: 0, isTextBox: true });
 
 (async () => {
   await pres.writeFile({ fileName: OUT });
