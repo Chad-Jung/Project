@@ -138,7 +138,7 @@ T = [
 ("Hold 최악 +0.059 ns (U4_UART_RX/rxd_s_reg)", "Worst hold +0.059 ns (U4_UART_RX/rxd_s_reg)"),
 ("RC 반영", "RC annotated"),
 ("실제 net 823개 100%", "100% of 823 real nets"),
-("(f) ECO — 미수행", "(f) ECO — not required"),
+("ECO — 미수행", "ECO — not required"),
 ("Sign-off STA 위반 0. Hold는 PnR 단계(CTS 후 · Route 후) optDesign -hold로 이미 해결. Untested 개수가 Pre-layout STA와 같아 PnR이 새 미검사 경로를 만들지 않음.", "Sign-off STA has 0 violations. Hold was already fixed in PnR (after CTS and route) with optDesign -hold. Untested counts match pre-layout STA, so PnR added no unchecked paths."),
 ("Post EC (합성 ↔ PnR)", "Post EC (synthesis ↔ PnR)"),
 ("계층 넷리스트 + wst SDF → TEST PASSED, FAIL 0", "hier netlist + wst SDF → TEST PASSED, 0 FAIL"),

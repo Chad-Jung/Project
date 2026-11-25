@@ -192,7 +192,7 @@ pres.addSection({ title: "Front-End" });
 s = pres.addSlide({ masterName: "SECTION_DARK", sectionTitle: "Front-End" });
 s.addText("Front-End", { placeholder: "title" });
 s.addText("RTL → Function Sim → 합성 → Pre-layout Sim / EC / STA", { placeholder: "body" });
-[["(a)", "Design Logic Diagram + Spec"], ["(b)", "Function Simulation + Waveform"], ["(c)", "Synthesis Script · Constraint · Setup Report"], ["(d)", "Pre-layout Simulation · 타이밍 오차"]].forEach((r, i) => {
+[["1", "Design Logic Diagram + Spec"], ["2", "Function Simulation + Waveform"], ["3", "Synthesis Script · Constraint · Setup Report"], ["4", "Pre-layout Simulation · 타이밍 오차"]].forEach((r, i) => {
   const y = 3.7 + i * 0.7;
   s.addShape(pres.shapes.OVAL, { x: MX, y, w: 0.5, h: 0.5, fill: { color: C.accent1 }, line: { type: "none" }, objectName: "num " + r[0] });
   s.addText(r[0], { x: MX, y, w: 0.5, h: 0.5, fontSize: 12, bold: true, color: C.background1, align: "center", valign: "middle", margin: 0, isTextBox: true });
@@ -202,7 +202,7 @@ s.addShape(pres.shapes.RECTANGLE, { x: 7.4, y: 1.0, w: 5.35, h: 5.5, fill: { col
 s.addImage({ path: U + "a01_block_diagram.png", ...fit("a01_block_diagram.png", 7.5, 1.1, 5.15, 5.3), altText: "Block diagram", objectName: "block diagram small" });
 
 // FE(a) block diagram
-s = content("Design Logic Diagram", "FE (a)", "Front-End");
+s = content("Design Logic Diagram", "RTL Design", "Front-End");
 img(s, U, "a01_block_diagram.png", MX, 1.2, 8.9, 5.35, { cap: "_UART_TOP 하위 모듈 6개 · 신호 연결 · 사양 · 레지스터 맵" });
 const df = [["송신", "REG_IF → TX_FIFO → UART_TX → o_txd"], ["수신", "i_rxd → UART_RX(2-flop 동기화, mid-bit) → RX_FIFO → REG_IF"], ["틱", "BAUD_GEN → osr_tick 16x → TX / RX"], ["상태 · 인터럽트", "FIFO full/empty, tx_busy, frame/overrun err → STATUS, o_intr"]];
 df.forEach((r, i) => {
@@ -213,7 +213,7 @@ df.forEach((r, i) => {
 });
 
 // FE(a) spec + RTL
-s = content("사양과 RTL 모듈 구성", "FE (a)", "Front-End");
+s = content("사양과 RTL 모듈 구성", "RTL Design", "Front-End");
 table(s, [["항목", "사양 (Spec Rev 1.0)"],
   ["Frame", "8-bit, Start 1 + Data 8 (LSB first) + Stop 1, No parity"],
   ["Baud rate", "115,200 bps (DIVISOR 27 → +0.47%)"],
@@ -233,7 +233,7 @@ table(s, [["모듈", "구현 포인트"],
   6.85, 1.35, 5.9, [1.75, 4.15], 12, { rowH: 0.57 });
 
 // FE(b) test plan
-s = content("Function Simulation — 검증 시나리오", "FE (b)", "Front-End");
+s = content("Function Simulation — 검증 시나리오", "Function Sim", "Front-End");
 table(s, [["Test", "내용"],
   ["T1", "리셋 값 (STATUS 0x05, INT_EN 0, txd 1, intr 0)"], ["T2", "1바이트(0x5A) 루프백 + TX 라인 모니터"],
   ["T3", "8바이트 연속 = FIFO depth, rx_full"], ["T4", "TX full 쓰기 무시, RX overrun, W1C"],
@@ -246,7 +246,7 @@ img(s, N, "01_funcsim_TEST_PASSED.png", 8.4, 1.3, 4.3, 4.35, { cap: "SimVision C
 note(s, "Self-checking TB · [PASS] 71 / [FAIL] 0 · clk 14 ns (30% 마진), 비트 6,048 ns", 8.4, 6.05, 4.3, 0.7, C.background2);
 
 // FE(b) waveforms
-s = content("Function Simulation — Waveform", "FE (b)", "Front-End");
+s = content("Function Simulation — Waveform", "Function Sim", "Front-End");
 img(s, U, "w01_func_full.png", MX, 1.3, 5.95, 3.5, { cap: "전체 0 ~ 3,088 µs: 루프백(T2~T6) · 외부 입력(T7) · T8~T11" });
 img(s, U, "w02_func_frame.png", 6.78, 1.3, 5.95, 3.5, { cap: "T8: 0x3C, 0xC3 연속 송신 → rxd 루프백, FIFO empty 시 intr" });
 table(s, [["확인 항목", "관찰", "판정"],
@@ -256,7 +256,7 @@ table(s, [["확인 항목", "관찰", "판정"],
   MX, 5.35, W - 2 * MX, [1.6, 9.6, 0.93], 12, { rowH: 0.36 });
 
 // FE(b) bit width + framing error
-s = content("Function Simulation — 비트 폭 · Framing error", "FE (b)", "Front-End");
+s = content("Function Simulation — 비트 폭 · Framing error", "Function Sim", "Front-End");
 img(s, U, "04_waveform_bit_width_cursor.png", MX, 1.3, 5.95, 3.6, { cap: "비트 폭 측정 — TimeA 12,173,000 ps / Baseline 18,221,000 ps" });
 img(s, U, "05_waveform_framing_error.png", 6.78, 1.3, 5.95, 3.6, { cap: "T5 Framing error — stop=0 프레임 (1,120 ~ 1,200 µs)" });
 table(s, [["확인 항목", "관찰", "판정"],
@@ -266,7 +266,7 @@ table(s, [["확인 항목", "관찰", "판정"],
   MX, 5.45, W - 2 * MX, [2.1, 9.1, 0.93], 12, { rowH: 0.36 });
 
 // FE(c) script
-s = content("Synthesis Run Script (Genus)", "FE (c)", "Front-End");
+s = content("Synthesis Run Script (Genus)", "Synthesis", "Front-End");
 code(s, [
   "set TOP_DESIGN _UART_TOP",
   "set LIB_LIST {fast_vdd1v0_basicCells.lib slow_vdd1v0_basicCells.lib pads_SS_s1vg.lib}",
@@ -295,7 +295,7 @@ code(s, [
 });
 
 // FE(c) constraint
-s = content("Constraint (uart.sdc)", "FE (c)", "Front-End");
+s = content("Constraint (uart.sdc)", "Synthesis", "Front-End");
 code(s, [
   "create_clock -period 16 -name MAIN_CLOCK [get_ports clk]",
   "set_clock_latency -source -max 0.2 [get_clocks MAIN_CLOCK]",
@@ -325,14 +325,14 @@ table(s, [["제약", "근거"],
   7.85, 1.3, 4.9, [1.7, 3.2], 12, { rowH: 0.66 });
 
 // FE(c) timing report
-s = content("Timing Report (Setup) · QoR", "FE (c)", "Front-End");
+s = content("Timing Report (Setup) · QoR", "Synthesis", "Front-End");
 img(s, N, "10_syn_qor.png", MX, 1.3, 3.9, 5.4, { cap: "19_qor — WNS +14,996.8 ps" });
 img(s, N, "09_syn_report_constraint.png", 4.85, 1.3, 3.9, 2.9, { cap: "report_constraint — 위반 0" });
 [["+14,996.8 ps", "Setup WNS (16 ns 중 1 ns 사용)"], ["0 / 0", "TNS / Violating paths"], ["563", "셀 (Sequential 213)"], ["2,984.7 µm²", "Total area (cell 2,278.7)"]].forEach((v, i) => stat(s, 9.05 + 0 * i, 1.3 + i * 1.38, 3.7, 1.2, v[0], v[1], i === 0 ? C.accent2 : C.text2));
 note(s, "check_design 구조 문제 0 · check_timing_intent 0 · 로그 에러 0", 4.85, 5.0, 3.9, 0.95);
 
 // FE: EC + STA pre
-s = content("Pre-layout EC · STA", "FE 검증", "Front-End");
+s = content("Pre-layout EC · STA", "Pre EC · STA", "Front-End");
 img(s, N, "13_ec_verification_PASS.png", MX, 1.3, 4.6, 4.2, { cap: "Conformal LEC — Compare Results PASS" });
 img(s, N, "15_sta_pre_coverage.png", 5.5, 1.3, 7.2, 2.6, { cap: "Tempus — report_analysis_coverage, Violated 0" });
 table(s, [["검증", "결과"],
@@ -342,7 +342,7 @@ table(s, [["검증", "결과"],
   5.5, 4.45, 7.2, [2.2, 5.0], 12, { rowH: 0.42 });
 
 // FE(d) pre-layout sim
-s = content("Pre-layout Simulation", "FE (d)", "Front-End");
+s = content("Pre-layout Simulation", "Pre-layout Sim", "Front-End");
 table(s, [["항목", "내용"],
   ["입력", "합성 넷리스트 + Genus SDF + 셀 Verilog 모델 (slow)"],
   ["Testbench", "Function과 동일, +define+sdf_gate 만 변경"],
@@ -355,7 +355,7 @@ note(s, "게이트 레벨: RTL 내부 신호를 보는 검사 2개는 define으�
 img(s, N, "14_presim_TEST_PASSED.png", 8.3, 1.3, 4.4, 4.9, { cap: "SimVision Console (Pre-layout) — TEST PASSED" });
 
 // FE(d) timing diff
-s = content("타이밍 오차 — Function vs Pre-layout", "FE (d)", "Front-End");
+s = content("타이밍 오차 — Function vs Pre-layout", "Pre-layout Sim", "Front-End");
 img(s, U, "w03_func_delay.png", MX, 1.3, 5.95, 2.95, { cap: "Function @231 ns — clk와 txd 동시 변화 (0 ps)" });
 img(s, U, "w06_pre_delay.png", 6.78, 1.3, 5.95, 2.95, { cap: "Pre-layout @231 ns — txd 231,080 ps (+80 ps)" });
 table(s, [["비교 지점", "Function", "Pre-layout", "원인"],
@@ -365,7 +365,7 @@ table(s, [["비교 지점", "Function", "Pre-layout", "원인"],
   MX, 4.85, W - 2 * MX, [3.4, 1.7, 2.3, 4.73], 12, { rowH: 0.42 });
 
 // FE(d) glitch
-s = content("타이밍 오차 — 조합 출력 글리치", "FE (d)", "Front-End");
+s = content("타이밍 오차 — 조합 출력 글리치", "Pre-layout Sim", "Front-End");
 img(s, U, "w07_pre_rdata.png", MX, 1.3, 7.9, 4.6, { cap: "Pre-layout — rdata가 232,190 ps에 01을 거쳐 45로 안정" });
 bullets(s, [
   [{ text: "현상  ", options: { bold: true, color: C.accent1 } }, { text: "STATUS 읽기에서 rdata 00 → 01 → 45" }],
@@ -381,7 +381,7 @@ pres.addSection({ title: "Back-End" });
 s = pres.addSlide({ masterName: "SECTION_DARK", sectionTitle: "Back-End" });
 s.addText("Back-End", { placeholder: "title" });
 s.addText("Floorplan → PowerPlan → Place → CTS → Route → Chip Finish → Sign-off", { placeholder: "body" });
-[["(a)", "APR 전 과정 Script"], ["(b)", "Import 파일 정리"], ["(c)", "단계별 캡처 (고대비 반전)"], ["(d)", "NanoRoute 후 타이밍"], ["(e)", "Hold 변화 · 버퍼 삽입"], ["(f)", "ECO"], ["(g)", "최종 타이밍 리포트"]].forEach((r, i) => {
+[["1", "APR 전 과정 Script"], ["2", "Import 파일 정리"], ["3", "단계별 캡처 (고대비 반전)"], ["4", "NanoRoute 후 타이밍"], ["5", "Hold 변화 · 버퍼 삽입"], ["6", "ECO"], ["7", "최종 타이밍 리포트"]].forEach((r, i) => {
   const y = 3.55 + i * 0.47;
   s.addShape(pres.shapes.OVAL, { x: MX, y, w: 0.38, h: 0.38, fill: { color: C.accent1 }, line: { type: "none" }, objectName: "num " + r[0] });
   s.addText(r[0], { x: MX, y, w: 0.38, h: 0.38, fontSize: 10, bold: true, color: C.background1, align: "center", valign: "middle", margin: 0, isTextBox: true });
@@ -391,7 +391,7 @@ s.addShape(pres.shapes.RECTANGLE, { x: 7.4, y: 1.0, w: 5.35, h: 5.5, fill: { col
 s.addImage({ path: U + "b06_cts_clock.png", ...fit("b06_cts_clock.png", 7.5, 1.1, 5.15, 5.3), altText: "CTS clock nets", objectName: "cts small" });
 
 // BE(a) scripts
-s = content("APR 전 과정 Script (Innovus · Tempus)", "BE (a)", "Back-End");
+s = content("APR 전 과정 Script (Innovus · Tempus)", "APR Script", "Back-End");
 const scr = [
   ["0_InitDesign", "init_design (MMMC)\nfloorPlan -r 1 0.7 10…\neditPin L/R M3, T/B M4\nsaveDesign InitDesign"],
   ["1_PowerPlan", "globalNetConnect VDD/VSS\naddRing M3/M4 w2\nsroute corePin (M1)\naddStripe M4 ×3 pair"],
@@ -410,7 +410,7 @@ scr.forEach((c, i) => {
 });
 
 // BE(b) import files
-s = content("Import 파일 정리", "BE (b)", "Back-End");
+s = content("Import 파일 정리", "PnR Setup", "Back-End");
 table(s, [["구분", "파일", "출처 · 설정"],
   ["Gate netlist", "_UART_TOP_syn_final.v", "Genus 출력 (계층 유지) · init_verilog"],
   ["Constraint", "_UART_TOP_pnr.sdc", "합성 SDC − set_ideal_network · constraint mode FUNC"],
@@ -430,7 +430,7 @@ note(s, "블록 단위 PnR: IO pad 없이 핀만 배치\n배선층 Metal1~4 · �
 note(s, "라이브러리는 파일 이름과 PVT만 기재 (PDK 내용 · 경로 비공개)", 8.85, 4.95, 3.9, 0.9, C.background2);
 
 // BE(c) floorplan + power
-s = content("Floorplan · PowerPlan", "BE (c)", "Back-End");
+s = content("Floorplan · PowerPlan", "Floorplan", "Back-End");
 img(s, U, "b01_floorplan.png", MX, 1.3, 4.2, 4.6, { cap: "① Floorplan — row · 핀 27개" });
 img(s, U, "b02_powerplan.png", 5.0, 1.3, 4.2, 4.6, { cap: "② PowerPlan — Ring · Rail · Stripe" });
 bullets(s, [
@@ -442,7 +442,7 @@ bullets(s, [
 ], 9.6, 1.35, 3.15, 5.2, 13);
 
 // BE(c) place
-s = content("Placement", "BE (c)", "Back-End");
+s = content("Placement", "Placement", "Back-End");
 img(s, U, "b03_place.png", MX, 1.3, 4.2, 4.6, { cap: "③ PlaceOpt — 셀 배치 · 예비 배선" });
 img(s, U, "b04_density.png", 5.0, 1.3, 4.2, 4.6, { cap: "Density Map — 최대 bin 0.827" });
 stat(s, 9.6, 1.3, 3.15, 1.15, "0.00%", "Overflow H / V");
@@ -451,7 +451,7 @@ stat(s, 9.6, 3.9, 3.15, 1.15, "72.2%", "Density (562 placed)");
 note(s, "RN 상수 핀 3개 → addTieHiLo로 TIEHI 2개 연결", 9.6, 5.2, 3.15, 0.95);
 
 // BE(c) CTS
-s = content("Clock Tree Synthesis", "BE (c)", "Back-End");
+s = content("Clock Tree Synthesis", "CTS", "Back-End");
 img(s, U, "b06_cts_clock.png", MX, 1.3, 4.2, 4.6, { cap: "④ CTS — 클록 net 강조" });
 img(s, U, "b11_clock_trees.png", 5.0, 1.3, 4.2, 4.6, { cap: "clock_trees.rpt — 버퍼 23 · 인버터 1 · depth 2" });
 table(s, [["항목", "결과"], ["클록 셀", "24개, 47.5 µm²"], ["Depth", "2 / 2"], ["Sink", "213"], ["Skew SS / FF", "0.056 / 0.018 ns"], ["최악 실제 Skew", "0.047 ns"], ["Leaf slew", "0.102 ns"]],
@@ -459,7 +459,7 @@ table(s, [["항목", "결과"], ["클록 셀", "24개, 47.5 µm²"], ["Depth", "
 note(s, "negedge 3개 = DFFNSR + 클록 인버터 (실제 clk ↑ 동작)", 9.6, 4.9, 3.15, 1.0);
 
 // BE(c) route + finish
-s = content("Route · Chip Finish", "BE (c)", "Back-End");
+s = content("Route · Chip Finish", "Route", "Back-End");
 img(s, U, "b07_route.png", MX, 1.3, 4.2, 4.6, { cap: "⑤ RouteDesign — M1~M4 배선" });
 img(s, U, "b08_chipfinish.png", 5.0, 1.3, 4.2, 4.6, { cap: "⑥ ChipFinish — Filler 573" });
 bullets(s, [
@@ -471,7 +471,7 @@ bullets(s, [
 ], 9.6, 1.35, 3.15, 5.2, 13);
 
 // BE(d)
-s = content("NanoRoute 후 타이밍 (Innovus)", "BE (d)", "Back-End");
+s = content("NanoRoute 후 타이밍 (Innovus)", "Post-route", "Back-End");
 table(s, [["구분", "all", "reg2reg", "default (I/O)", "Violating"],
   ["Setup WNS (FUNC_SS_WORST)", "+12.938 ns", "+13.021", "+12.938", "0"],
   ["Hold WNS (FUNC_FF_BEST)", "+0.022 ns", "+0.059", "+0.022", "0"],
@@ -484,7 +484,7 @@ stat(s, MX + 8.16, 4.2, 3.95, 1.3, "0", "DRC / Connectivity 위반");
 note(s, "RC 추출(extractRC) 후 setup → hold 순서로 최적화 · SI off, single analysis mode", MX, 5.8, W - 2 * MX, 0.7);
 
 // BE(e)
-s = content("Hold Timing 변화와 버퍼 삽입", "BE (e)", "Back-End");
+s = content("Hold Timing 변화와 버퍼 삽입", "Hold Fix", "Back-End");
 s.addChart(pres.charts.BAR, [{ name: "삽입 버퍼", labels: ["Place 후", "CTS 후", "Route 후"], values: [0, 106, 63] }], {
   x: MX, y: 1.3, w: 4.6, h: 3.6, barDir: "col", chartColors: [HEX.accent1], showValue: true, dataLabelPosition: "outEnd",
   dataLabelColor: HEX.dk1, dataLabelFontSize: 12, dataLabelFontFace: "+mn-lt", showTitle: true, title: "단계별 Hold 버퍼 (누적 169)",
@@ -506,7 +506,7 @@ bullets(s, [
 note(s, "기타 삽입 셀: Setup/DRV 버퍼 FE_OFC 40 · 클록 셀 24 · TIEHI 2", MX, 5.95, W - 2 * MX, 0.6, C.background2);
 
 // BE(f)(g)
-s = content("최종 타이밍 리포트 (Tempus Sign-off) · ECO", "BE (f)(g)", "Back-End");
+s = content("최종 타이밍 리포트 (Tempus Sign-off) · ECO", "Sign-off STA", "Back-End");
 img(s, U, "b16_sta_coverage.png", MX, 1.3, 6.6, 2.15, { cap: "report_analysis_coverage — 전 항목 Violated 0" });
 img(s, U, "b17_sta_setup.png", MX, 3.95, 6.6, 1.25, { cap: "Setup 최악 +12.938 ns (U3_RX_FIFO/o_data_reg_0)" });
 img(s, U, "b19_sta_hold.png", MX, 5.65, 6.6, 0.9, { cap: "Hold 최악 +0.059 ns (U4_UART_RX/rxd_s_reg)" });
@@ -515,13 +515,13 @@ table(s, [["Check", "Violated", "Untested"],
   7.6, 1.3, 5.15, [1.9, 1.8, 1.45], 12, { rowH: 0.44 });
 s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 7.6, y: 4.2, w: 5.15, h: 2.3, rectRadius: 0.08, fill: { color: C.text2 }, line: { type: "none" }, objectName: "eco card" });
 s.addText([
-  { text: "(f) ECO — 미수행", options: { bold: true, color: C.accent1, fontSize: 16, breakLine: true } },
+  { text: "ECO — 미수행", options: { bold: true, color: C.accent1, fontSize: 16, breakLine: true } },
   { text: "Sign-off STA 위반 0. Hold는 PnR 단계(CTS 후 · Route 후) optDesign -hold로 이미 해결. Untested 개수가 Pre-layout STA와 같아 PnR이 새 미검사 경로를 만들지 않음.", options: { color: C.background1, fontSize: 13 } },
 ], { x: 7.8, y: 4.3, w: 4.75, h: 2.1, valign: "top", margin: 0, isTextBox: true });
 
 // ======================= SIGN-OFF =======================
 pres.addSection({ title: "Sign-off" });
-s = content("Post-layout EC · Simulation", "Sign-off", "Sign-off");
+s = content("Post-layout EC · Simulation", "Post-layout", "Sign-off");
 table(s, [["검증", "결과"],
   ["Post EC (합성 ↔ PnR)", "PI 17 · PO 10 · DFF 213, 223 Equivalent, Unmapped 0 → PASS"],
   ["Post Sim max (SS)", "계층 넷리스트 + wst SDF → TEST PASSED, FAIL 0"],
