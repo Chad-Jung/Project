@@ -20,6 +20,7 @@ const DIM = {
   "01_funcsim_TEST_PASSED.png": [726, 834], "09_syn_report_constraint.png": [527, 377], "10_syn_qor.png": [553, 767],
   "12_ec_statistics.png": [1098, 959], "13_ec_verification_PASS.png": [1099, 956], "14_presim_TEST_PASSED.png": [726, 845],
   "15_sta_pre_coverage.png": [890, 341],
+  "04_waveform_bit_width_cursor.png": [1328, 783], "05_waveform_framing_error.png": [1329, 780],
 };
 
 const THEME = {
@@ -237,6 +238,16 @@ table(s, [["확인 항목", "관찰", "판정"],
   ["비트 폭", "6,048,000 ps = 16 tick × 27 clk × 14 ns", "✓"],
   ["인터럽트", "두 번째 바이트가 시프트되는 순간 TX FIFO empty → intr 1", "✓"]],
   MX, 5.35, W - 2 * MX, [1.6, 9.6, 0.93], 12, { rowH: 0.36 });
+
+// FE(b) bit width + framing error
+s = content("Function Simulation — 비트 폭 · Framing error", "FE (b)", "Front-End");
+img(s, U, "04_waveform_bit_width_cursor.png", MX, 1.3, 5.95, 3.6, { cap: "비트 폭 측정 — TimeA 12,173,000 ps / Baseline 18,221,000 ps" });
+img(s, U, "05_waveform_framing_error.png", 6.78, 1.3, 5.95, 3.6, { cap: "T5 Framing error — stop=0 프레임 (1,120 ~ 1,200 µs)" });
+table(s, [["확인 항목", "관찰", "판정"],
+  ["비트 폭 (T9)", "D1 → D2 시작 간격 6,048,000 ps = 16 tick × 27 clk × 14 ns (사양서 7.1, 9)", "✓"],
+  ["Framing error (T5)", "0xC3 프레임의 stop = 0 → frame_err 1-clk 펄스, rx_fifo_wr 없음 (프레임 폐기)", "✓"],
+  ["인터럽트 (T5)", "frame_err 후 intr = 1 (sticky) → INT_CLR W1C 후 0", "✓"]],
+  MX, 5.45, W - 2 * MX, [2.1, 9.1, 0.93], 12, { rowH: 0.36 });
 
 // FE(c) script
 s = content("Synthesis Run Script (Genus)", "FE (c)", "Front-End");
